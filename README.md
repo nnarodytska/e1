@@ -31,9 +31,13 @@ Streamed response with feedback collection
 
 ## Quick Start
 
-### 1. Install dependencies
+The repo includes preprocessed book content, so you can run the agent immediately.
+
+### 1. Clone and install
 
 ```bash
+git clone https://github.com/nnarodytska/e1.git
+cd e1
 pip install -r requirements.txt
 ```
 
@@ -45,27 +49,7 @@ Create a `.env` file:
 ANTHROPIC_API_KEY=sk-ant-your-key-here
 ```
 
-### 3. Pre-process the book (first time only)
-
-The book must be placed at `book/VMware vSphere Metrics.docx`.
-
-```bash
-# Convert docx to structured markdown
-python3 preprocess.py
-
-# Describe images using Claude vision (optional, ~10-15 min)
-python3 describe_images.py
-
-# Build final book with image descriptions
-python3 build_book.py
-
-# Split into chapters for dynamic routing
-python3 split_chapters.py
-```
-
-If you skip image descriptions, the agent still works — it just won't have textual descriptions of charts and diagrams.
-
-### 4. Run the web app
+### 3. Run
 
 ```bash
 python3 -m uvicorn app:app --host 0.0.0.0 --port 8000
@@ -73,7 +57,7 @@ python3 -m uvicorn app:app --host 0.0.0.0 --port 8000
 
 Open http://localhost:8000
 
-### 5. Expose publicly (optional)
+### 4. Expose publicly (optional)
 
 ```bash
 # With ngrok (replace with your domain)
@@ -86,6 +70,28 @@ Or with Docker:
 docker build -t vmware-metrics-qa .
 docker run -p 8000:8000 -e ANTHROPIC_API_KEY=sk-ant-... vmware-metrics-qa
 ```
+
+## Re-processing the Book (optional)
+
+The preprocessed content is included in the repo. You only need to re-run these steps if the book is updated.
+
+Place the updated book at `book/VMware vSphere Metrics.docx`, then:
+
+```bash
+# Convert docx to structured markdown
+python3 preprocess.py
+
+# Describe images using Claude vision (~10-15 min, uses API credits)
+python3 describe_images.py
+
+# Build final book with image descriptions
+python3 build_book.py
+
+# Split into chapters for dynamic routing
+python3 split_chapters.py
+```
+
+If you skip `describe_images.py`, the agent still works — it just won't have textual descriptions of charts and diagrams.
 
 ## Project Structure
 
@@ -100,10 +106,8 @@ docker run -p 8000:8000 -e ANTHROPIC_API_KEY=sk-ant-... vmware-metrics-qa
 ├── Dockerfile              # Container build
 ├── .env                    # API key (not committed)
 │
-├── book/                   # Source book (.docx)
 ├── book_raw.md             # Converted markdown (no image descriptions)
 ├── book.md                 # Full markdown (with image descriptions)
-├── images/                 # Extracted images from book
 ├── image_descriptions.json # Vision-generated image descriptions
 │
 ├── chapters/               # Book split into individual chapters
@@ -128,7 +132,7 @@ docker run -p 8000:8000 -e ANTHROPIC_API_KEY=sk-ant-... vmware-metrics-qa
 
 ## Skills
 
-Skills are markdown files in `skills/` that are loaded automatically at startup. They instruct the model how to respond in specific situations.
+Skills are markdown files in `skills/` that are loaded automatically at startup. They instruct the model how to respond in specific situations — no code changes needed.
 
 | Skill | File | Trigger |
 |-------|------|---------|
