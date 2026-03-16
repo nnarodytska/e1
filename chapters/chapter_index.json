@@ -1,0 +1,181 @@
+[
+  {
+    "filename": "00_preamble.md",
+    "title": "Preamble",
+    "tokens": 1851,
+    "sections": []
+  },
+  {
+    "filename": "01_introduction.md",
+    "title": "Introduction",
+    "tokens": 26755,
+    "sections": [
+      "The World of Metrics",
+      "  - Nuances in Metrics",
+      "  - Virtualization Impact",
+      "Metric Mastery",
+      "  - Triple See Method",
+      "  - Collection",
+      "  - Aggregation",
+      "Performance Modelling",
+      "  - Calculation",
+      "  - Optional Features",
+      "  - Validation"
+    ]
+  },
+  {
+    "filename": "02_cpu.md",
+    "title": "CPU",
+    "tokens": 48251,
+    "sections": [
+      "Architecture",
+      "  - Guest OS vs VM",
+      "  - ESXi \u2260 VM + Kernel",
+      "  - CPU vs vCPU",
+      "  - State of a VM vCPU",
+      "  - 2 Metrics Not 1",
+      "  - Frequency | Efficiency",
+      "VM",
+      "  - Contention Metrics",
+      "  - Wait Metrics",
+      "  - Consumption Metrics",
+      "  - Quiz!",
+      "ESXi",
+      "  - Consumption Metrics",
+      "  - Wait Metric",
+      "  - Contention Metrics"
+    ]
+  },
+  {
+    "filename": "03_memory.md",
+    "title": "Memory",
+    "tokens": 33884,
+    "sections": [
+      "Architecture",
+      "  - The 4 Layers",
+      "  - Guest OS vs VM",
+      "VM",
+      "  - Overview",
+      "  - \u201cContention\u201d Metrics",
+      "  - Consumption Metrics",
+      "  - Quiz!",
+      "ESXi",
+      "  - Overview",
+      "  - \u201cContention\u201d Metrics",
+      "  - Consumption Metrics"
+    ]
+  },
+  {
+    "filename": "04_storage.md",
+    "title": "Storage",
+    "tokens": 26659,
+    "sections": [
+      "Architecture",
+      "  - Storage Layers",
+      "  - VM Layer",
+      "  - ESXi Layer",
+      "  - Datastore Layer",
+      "VM",
+      "  - Overview",
+      "  - Performance Metrics",
+      "  - Capacity Metrics",
+      "ESXi",
+      "  - Disk or Device",
+      "  - Storage Adapter & Path",
+      "  - Datastore"
+    ]
+  },
+  {
+    "filename": "05_network.md",
+    "title": "Network",
+    "tokens": 17036,
+    "sections": [
+      "Architecture",
+      "  - Unique Characteristics",
+      "  - Network Observability",
+      "VM",
+      "  - Overview",
+      "  - Contention Metrics",
+      "  - Consumption Metrics",
+      "ESXi",
+      "  - Contention Metrics",
+      "  - Consumption Metrics"
+    ]
+  },
+  {
+    "filename": "06_consumer.md",
+    "title": "Consumer",
+    "tokens": 15269,
+    "sections": [
+      "Performance: VM",
+      "  - VM Performance (%)",
+      "  - vMotion",
+      "  - Latency Sensitivity",
+      "Capacity: VM",
+      "  - VM Footprint | Guest OS Sizing",
+      "  - Benefits",
+      "  - Guest OS Sizing",
+      "  - VM Footprint"
+    ]
+  },
+  {
+    "filename": "07_provider.md",
+    "title": "Provider",
+    "tokens": 47890,
+    "sections": [
+      "Overview",
+      "  - vSphere Cluster",
+      "Performance",
+      "  - Utilization vs Contention",
+      "  - Cluster Performance (%)",
+      "  - Troubleshooting",
+      "  - Service Level Metrics",
+      "Capacity",
+      "  - Hypervisor",
+      "  - CPU",
+      "  - Memory",
+      "  - Implementation",
+      "  - Cluster Capacity",
+      "Other Metrics",
+      "  - Availability",
+      "esxtop",
+      "  - Overview",
+      "  - CPU",
+      "  - Memory",
+      "  - Storage",
+      "  - Network"
+    ]
+  },
+  {
+    "filename": "08_ms_windows.md",
+    "title": "MS Windows",
+    "tokens": 21993,
+    "sections": [
+      "Introduction",
+      "CPU",
+      "  - Run Queue",
+      "  - Context Switch",
+      "  - DPC Time",
+      "  - Runaway Process",
+      "  - Usage | Utilization | Time",
+      "Memory",
+      "  - In Use",
+      "  - Modified",
+      "  - Standby",
+      "  - Cache",
+      "  - Free",
+      "  - Page File",
+      "  - Active File Cache Memory",
+      "  - Committed",
+      "  - Needed Memory",
+      "Storage",
+      "  - Disk Queue"
+    ]
+  },
+  {
+    "filename": "09_epilogue.md",
+    "title": "Epilogue",
+    "tokens": 372,
+    "sections": []
+  }
+]

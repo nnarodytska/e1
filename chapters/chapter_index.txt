@@ -1,0 +1,131 @@
+## Preamble (~1,851 tokens)
+
+## Introduction (~26,755 tokens)
+  The World of Metrics
+    - Nuances in Metrics
+    - Virtualization Impact
+  Metric Mastery
+    - Triple See Method
+    - Collection
+    - Aggregation
+  Performance Modelling
+    - Calculation
+    - Optional Features
+    - Validation
+
+## CPU (~48,251 tokens)
+  Architecture
+    - Guest OS vs VM
+    - ESXi ≠ VM + Kernel
+    - CPU vs vCPU
+    - State of a VM vCPU
+    - 2 Metrics Not 1
+    - Frequency | Efficiency
+  VM
+    - Contention Metrics
+    - Wait Metrics
+    - Consumption Metrics
+    - Quiz!
+  ESXi
+    - Consumption Metrics
+    - Wait Metric
+    - Contention Metrics
+
+## Memory (~33,884 tokens)
+  Architecture
+    - The 4 Layers
+    - Guest OS vs VM
+  VM
+    - Overview
+    - “Contention” Metrics
+    - Consumption Metrics
+    - Quiz!
+  ESXi
+    - Overview
+    - “Contention” Metrics
+    - Consumption Metrics
+
+## Storage (~26,659 tokens)
+  Architecture
+    - Storage Layers
+    - VM Layer
+    - ESXi Layer
+    - Datastore Layer
+  VM
+    - Overview
+    - Performance Metrics
+    - Capacity Metrics
+  ESXi
+    - Disk or Device
+    - Storage Adapter & Path
+    - Datastore
+
+## Network (~17,036 tokens)
+  Architecture
+    - Unique Characteristics
+    - Network Observability
+  VM
+    - Overview
+    - Contention Metrics
+    - Consumption Metrics
+  ESXi
+    - Contention Metrics
+    - Consumption Metrics
+
+## Consumer (~15,269 tokens)
+  Performance: VM
+    - VM Performance (%)
+    - vMotion
+    - Latency Sensitivity
+  Capacity: VM
+    - VM Footprint | Guest OS Sizing
+    - Benefits
+    - Guest OS Sizing
+    - VM Footprint
+
+## Provider (~47,890 tokens)
+  Overview
+    - vSphere Cluster
+  Performance
+    - Utilization vs Contention
+    - Cluster Performance (%)
+    - Troubleshooting
+    - Service Level Metrics
+  Capacity
+    - Hypervisor
+    - CPU
+    - Memory
+    - Implementation
+    - Cluster Capacity
+  Other Metrics
+    - Availability
+  esxtop
+    - Overview
+    - CPU
+    - Memory
+    - Storage
+    - Network
+
+## MS Windows (~21,993 tokens)
+  Introduction
+  CPU
+    - Run Queue
+    - Context Switch
+    - DPC Time
+    - Runaway Process
+    - Usage | Utilization | Time
+  Memory
+    - In Use
+    - Modified
+    - Standby
+    - Cache
+    - Free
+    - Page File
+    - Active File Cache Memory
+    - Committed
+    - Needed Memory
+  Storage
+    - Disk Queue
+
+## Epilogue (~372 tokens)
+
