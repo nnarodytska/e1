@@ -26,8 +26,22 @@ Streamed response with feedback collection
 ## Prerequisites
 
 - Python 3.12+
-- Anthropic API key
+- Anthropic API key (only needed for the web app / CLI agent)
 - ngrok account (optional, for public access)
+
+## No API Key? Use Cursor Directly
+
+You can use this repo as a local knowledge base in Cursor without running `app.py` and without any API key for this project.
+
+1. Open this folder in Cursor.
+2. Ask your question in Cursor Chat (example: "Explain CPU Ready vs Co-Stop for a VM").
+3. For better grounding, reference files directly in your prompt:
+   - `@chapters/02_cpu.md`
+   - `@chapters/07_provider.md`
+   - `@book.md`
+4. The repo includes a Cursor rule at `.cursor/rules/vsphere-knowledge-base.mdc` so answers stay aligned to the book structure and terminology.
+
+Use the API-based app only if you specifically want the standalone web chat UI in this repo.
 
 ## Quick Start
 
