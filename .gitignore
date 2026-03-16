@@ -1,0 +1,30 @@
+# Environment
+.env
+__pycache__/
+*.pyc
+
+# Large files (book source, images, generated content)
+book/
+images/
+image_descriptions.json
+book_raw.md
+book.md
+chapters/
+feedback.db
+
+# Book source (too large for git)
+*.docx
+
+# Ngrok
+ngrok_recovery_codes.txt
+
+# Claude
+.claude/
+
+# System
+.DS_Store
+*.swp
+
+# IDE
+.vscode/
+.idea/
