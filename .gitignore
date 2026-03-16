@@ -3,13 +3,11 @@
 __pycache__/
 *.pyc
 
-# Large files (book source, images, generated content)
+# Book source docx and extracted images (too large for git)
 book/
 images/
-image_descriptions.json
-book_raw.md
-book.md
-chapters/
+
+# Runtime data
 feedback.db
 
 # Book source (too large for git)
