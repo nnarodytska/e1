@@ -26,3 +26,4 @@ ngrok_recovery_codes.txt
 # IDE
 .vscode/
 .idea/
+tests/
