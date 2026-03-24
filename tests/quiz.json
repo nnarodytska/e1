@@ -1,0 +1,278 @@
+[
+  {
+    "id": "cpu_1",
+    "section": "CPU",
+    "title": "ESXi CPU Utilisation",
+    "context": "Study the following chart.\n\nSince the chart is too small, let's zoom to the initial part.\n\nFocus at the end, where the counters spike.",
+    "question": "What is the ESXi true utilisation since there are 3 metrics with different values?",
+    "options": [
+      "A: 100%. The blue line.",
+      "B: 70%. The green line",
+      "C: 40%. The black line.",
+      "D: None. To get the true utilization you need to sum the running VMs + kernel."
+    ],
+    "images": ["tests/images/image4.png", "tests/images/image3.png"],
+    "hint": "think ESXi capacity, not VM performance.",
+    "answer_key": "A"
+  },
+  {
+    "id": "cpu_2",
+    "section": "CPU",
+    "title": "VM CPU Speed",
+    "context": "Cluster 007 sports ESXi hosts with the following specifications:\n- Intel Xeon 2.0 GHz\n- All Cores Turbo 2.5 GHz\n- Single Core Turbo 3.0 GHz\n- Hyper threading enabled\n- BIOS Power Management is set to OS Controlled\n- ESXi Power Management is set to Balance, not high performance\n- All ESXi hosts have identical configuration.",
+    "question": "What do you tell tenants the CPU speed their VMs likely get during actual run? This is not the configured speed as that's a known constant. This is the real speed that is most likely to happen when the overall clusters CPU are busy from serving many demanding VMs. While the actual speed fluctuates, which speed is most realistic for a given vCPU?",
+    "options": [
+      "A: 1.6 GHz",
+      "B: 2.0 GHz",
+      "C: 2.6 GHz",
+      "D: 3.0 GHz",
+      "E: It depends. Not enough information to determine"
+    ],
+    "images": [],
+    "answer_key": "D"
+  },
+  {
+    "id": "cpu_3",
+    "section": "CPU",
+    "title": "ESXi Total Capacity",
+    "context": "Review the difference between these 2 ESXi hosts.",
+    "question": "What's the capacity for each host?\n\nHint:\n- The 2 hosts have different specifications. So the 2 answers must be different.\n- ESXi capacity can also be expressed in terms of CPU compute cycles. This is the amount of processing that it can do per second. It is not the same with the count of cores.",
+    "options": [],
+    "images": ["tests/images/image1.png"],
+    "answer_key": "open-ended (table entries: Q3=A,B,C,D and Q4=A and A)"
+  },
+  {
+    "id": "cpu_4",
+    "section": "CPU",
+    "title": "ESXi CPU Frequency",
+    "context": "Review the following CPU specification. The screenshot is taken from Intel website with no change.",
+    "question": "Choose all the correct ones:",
+    "options": [
+      "A: The nominal clock speed is 2.4 GHz. However, the CPU is able to run all cores simultaneously at 3.4 GHz while consuming the same amount of power.",
+      "B: The total power consumption is 210 Watt for normal operations. ESXi will consume more than this if you set power management to high performance. This is why it's not recommended.",
+      "C: The Max Turbo Frequency can only be achieved via High Performance setting. The Balance option will not boost to this level.",
+      "D: If you set BIOS power management to OS Controlled, and ESXi power management to balance (not high performance), you will sacrifice performance as you save energy.",
+      "E: The 3 speeds (2.4 vs 3.4 vs 4.0) require different power consumption. 4 GHz is more than 210 Watt, while 2.4 GHz is less than 210 W."
+    ],
+    "images": ["tests/images/image2.png"],
+    "answer_key": "C"
+  },
+  {
+    "id": "cpu_5",
+    "section": "CPU",
+    "title": "VM CPU Rightsize",
+    "context": "A correctly sized VM balances performance, capacity and cost.",
+    "question": "Choose the most accurate counters for VM right size:\n\nHint: since a VM is a motherboard, what you want to size is actually the Guest OS, not the VM.",
+    "options": [
+      "A: VM CPU Usage (MHz)",
+      "B: VM CPU Usage (%)",
+      "C: VM CPU Demand",
+      "D: VM CPU Run - Overlap. In VCF Operations this is shown as CPU Net Run (%)."
+    ],
+    "images": [],
+    "answer_key": "C"
+  },
+  {
+    "id": "cpu_6",
+    "section": "CPU",
+    "title": "VM CPU \"Contention\"",
+    "context": "In a shared environment, a VM vCPU may not get the resource it asks for a number of reasons. It could be due to settings or highly utilized ESXi host.",
+    "question": "Choose all the counters that measure a VM CPU is unable to run. This means it completely stops, not just slowing down.",
+    "options": [
+      "A: CPU Ready",
+      "B: CPU Co-stop",
+      "C: CPU Overlap",
+      "D: CPU Other Wait",
+      "E: CPU Demand"
+    ],
+    "images": [],
+    "answer_key": "A"
+  },
+  {
+    "id": "cpu_7",
+    "section": "CPU",
+    "title": "Guest OS CPU",
+    "context": "The performance of Windows or Linux impacts the application performance. Some of these issues are not visible to the underlying VM, hence it's important to know them.",
+    "question": "Choose all the correct sentences:",
+    "options": [
+      "A: Guest OS is aware of hyperthreading and will schedule its processes accordingly.",
+      "B: CPU Run Queue has nothing to do with performance, as it's common for Windows and Linux to form queue",
+      "C: CPU Context Switch does not impact application performance at all.",
+      "D: All else being equal, a longer queue can impact application performance as more processes are waiting.",
+      "E: Context switch does impact performance as the CPU can complete other tasks instead of switching from one process to another."
+    ],
+    "images": [],
+    "answer_key": "A"
+  },
+  {
+    "id": "cpu_8",
+    "section": "CPU",
+    "title": "Reservation",
+    "context": "Reservation, shares and limit are 3 controls of resource management. There are situations where you need to set a reservation to VM or Resource Pool.",
+    "question": "Choose all the correct ones:",
+    "options": [
+      "A: The total reservation at ESXi level is capped at the base nominal clock speed. Due to Turbo Boost, this means you cannot fully reserve the total possible capacity.",
+      "B: CPU reservation is only applicable for VM. The ESXi kernel does not have reservation as the kernel processes have higher priority.",
+      "C: CPU reservation only comes into play in the event contention. If there is contention, the reservation is not used.",
+      "D: VM CPU reservation is not \u201csticky\u201d. The moment the VM vCPU does not use it, it immediately becomes available to other VMs.",
+      "E: You can overcommit CPU reservation because it\u2019s not \u201csticky\u201d. The total reservation from all VMs can exceed the ESXi capacity.",
+      "F: CPU Reservation is set in Hertz, not vCPU. The reason is what is being reserved is CPU cycles, not core or thread.",
+      "G: When you run vSAN, NSX and ESXi, the total kernel reservation will likely be higher than the kernel actual utilization, even when ESXi is highly utilized. This is to guarantee that the kernel is protected."
+    ],
+    "images": [],
+    "answer_key": "A"
+  },
+  {
+    "id": "cpu_9",
+    "section": "CPU",
+    "title": "ESXi CPU Utilisation (HT balance)",
+    "context": "",
+    "question": "The metric CPU Utilisation shows 50% and but the metric CPU Core Utilisation shows 50%. What does it tell you?",
+    "options": [
+      "A: Severe imbalance. Half the cores are running 2 threads, but the other half is completely idle.",
+      "B: Ideal scenario. Each core runs 1 thread each, so every running vCPU gets a dedicated core.",
+      "C: Nothing. Not enough information to derive any meaningful insight.",
+      "D: This combination is not possible. CPU Utilization is always lower than CPU Core Utilization."
+    ],
+    "images": [],
+    "answer_key": "B, C"
+  },
+  {
+    "id": "cpu_10",
+    "section": "CPU",
+    "title": "Performance vs Capacity",
+    "context": "Performance management and Capacity management are highly related, which also means they are not the same thing.",
+    "question": "Choose all the correct ones:",
+    "options": [
+      "A: For performance, 100% utilization is not only good, it\u2019s perfect. So long there is no queue, higher utilization equals more throughput.",
+      "B: For capacity, 100% utilization is bad news, especially if it breaches Usable Capacity. This means capacity is low. You may need to add more capacity or reclaim.",
+      "C: For performance, low utilization may mean bad news as no work is being done. Check if there is a bottleneck somewhere else causing the low utilization.",
+      "D: ESXi capacity looks at the ESXi utilization, while ESXi performance looks at how it\u2019s serving its running VMs."
+    ],
+    "images": [],
+    "answer_key": "C, D"
+  },
+  {
+    "id": "cpu_11",
+    "section": "CPU",
+    "title": "Reclamation",
+    "context": "A 32-vCPU VM has been idle for weeks. You want to reclaim it to free up capacity.",
+    "question": "Choose all the correct ones:",
+    "options": [
+      "A: You should only reclaim a maximum 16 vCPU, because idle means it\u2019s using less than half.",
+      "B: If you reclaim 20 vCPU, that means you\u2019re freeing up 20 vCPU. If the ESXi sports a 2 GHz, that means you free up 40 GHz worth of capacity.",
+      "C: You\u2019re basically reclaiming \u201cblank air\u201d as the reclaimed CPU is idle. You cannot assume you can safely deploy an active VM. Idle CPU is not the same as an active CPU.",
+      "D: You should power off the VM, as this will also free up the VM memory."
+    ],
+    "images": [],
+    "answer_key": "A, B, C, D"
+  },
+  {
+    "id": "mem_1",
+    "section": "Memory",
+    "title": "Q1. VM Memory Rightsize",
+    "context": "Windows or Linux memory management is complex.",
+    "question": "Choose the most accurate counter for VM right size.",
+    "options": [
+      "A: VM Memory Consumed",
+      "B: VM Memory Active",
+      "C: (VM Memory Consumed + VM Memory Active) / 2",
+      "D: VM Memory Active + Balloon + Swapped + Zipped",
+      "E: Guest OS Memory Used"
+    ],
+    "images": [],
+    "answer_key": "E"
+  },
+  {
+    "id": "mem_2",
+    "section": "Memory",
+    "title": "Q2. VM vs Guest OS",
+    "context": "The following sentences cover the relationship between VM metrics and Guest OS metrics.",
+    "question": "Choose all the correct ones:",
+    "options": [
+      "A: VM and Guest OS metrics are independently managed. VM is managed by hypervisor, while Guest OS is managed by Windows or Linux. Neither layer considers the other.",
+      "B: VM memory utilization and Guest OS memory utilization can have significantly different values. Their patterns over time also do not tally.",
+      "C: When Windows or Linux frees up a page, the same block will automatically be freed up by ESXi for the associated VM. This will happen within a few minutes.",
+      "D: If VMware Tools is not running, the hypervisor cannot do ballooning on the VM.",
+      "E: If VMware Tools is not running, VCF Operations rightsizing will be less accurate. It falls back to consumed memory, which tends to show higher utilization."
+    ],
+    "images": [],
+    "answer_key": "A, B, D, E"
+  },
+  {
+    "id": "mem_3",
+    "section": "Memory",
+    "title": "Q3. VM Memory \"Contention\"",
+    "context": "",
+    "question": "Which metric best indicates a VM has actual memory performance? Do not select counters that indicate risk, but not actual slowness.",
+    "options": [
+      "A: VM Memory Ballooned",
+      "B: VM Memory Swapped + Zipped",
+      "C: VM Memory Latency",
+      "D: When Ballooned = Configured."
+    ],
+    "images": [],
+    "answer_key": "C"
+  },
+  {
+    "id": "mem_4",
+    "section": "Memory",
+    "title": "Q4. Memory Reservation",
+    "context": "Reservation, shares and limit are 3 controls of resource management. There are situations where you need to set a reservation to VM or Resource Pool.",
+    "question": "Choose the correct ones:",
+    "options": [
+      "A: Memory reservation differs from CPU reservation because it\u2019s \u201csticky\u201d. Once memory reservation is used, the consumed page can remain in place for days. It does not go away immediately (read: becomes available for other VM).",
+      "B: Use reservation sparingly as it directly impacts your ability to overcommit.",
+      "C: Only VM has reservation. Resource Pool does not have its own setting, and instead aggregates its member VMs.",
+      "D: Kernel reservation means the amount is not available to VM, regardless whether the kernel actually uses it or not.",
+      "E: When you run vSAN, NSX and ESXi, the total kernel reservation will likely be higher than the kernel actual utilization, even when ESXi is highly utilized. This is to guarantee that the kernel is protected."
+    ],
+    "images": [],
+    "answer_key": "A, B"
+  },
+  {
+    "id": "mem_5",
+    "section": "Memory",
+    "title": "Q5. ESXi Memory \"Utilisation\"",
+    "context": "You notice the following on ESXi 007:\n- Ballooned has been flat 0 in the last 24 hours.\n- During the same period, both Swapped and Compressed are not 0.\n- Consumed memory is not high. Definitely there is enough capacity to deploy an additional VM.",
+    "question": "Choose the correct ones:",
+    "options": [
+      "A: The above situation is not possible. Ballooning happens before swapping and compressing. If balloon is 0, then compress and swap should be 0 too.",
+      "B: The swapped and compressed happened in the past. Since then, the pages were not recalled by the associated VMs, hence they remained in their state.",
+      "C: ESXi is not under memory pressure, hence it does not have the need to inflate the balloon.",
+      "D: This situation happens because of memory tiering."
+    ],
+    "images": [],
+    "answer_key": "B, C"
+  },
+  {
+    "id": "storage_1",
+    "section": "Storage",
+    "title": "Q1. Latency vs OIO",
+    "context": "",
+    "question": "What's the relationship between the disk latency metric and disk outstanding IO?",
+    "options": [
+      "A: Nothing. The correlation is weak as one is before processing while the other is after processing.",
+      "B: Outstanding IO = IO commands per second x Latency",
+      "C: Outstanding IO = IO commands per second / Latency",
+      "D: Outstanding IO = Throughput x Latency"
+    ],
+    "images": [],
+    "answer_key": "B"
+  },
+  {
+    "id": "cost_1",
+    "section": "Cost and Price",
+    "title": "Q1. VM Cost",
+    "context": "Roughly, how much would you pay if you buy 1000 VM from hyper-scalers? The VMs average 4 vCPU, 16 GB RAM, 0.5 TB disk, up to 10 Gb network speed.\n\nThey come with:\n- Support. Not on-site.\n- Self service portal to manage these 1000 VM.\n- Observability\n- Sufficient IP address\n\nThese costs are not included:\n- Guest OS\n- Security software.\n\nYou pay 1 year, in advance, for 24/7 usage.",
+    "question": "Roughly, what will be the average cost among the top 3 hyperscalers?",
+    "options": [
+      "A: US$ 1 million per year.",
+      "B: US$ 1.5 million per year.",
+      "C: US$ 2 million per year.",
+      "D: US$ 2.5 million per year."
+    ],
+    "images": [],
+    "answer_key": "C"
+  }
+]

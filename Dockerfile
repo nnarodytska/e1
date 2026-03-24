@@ -8,6 +8,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app.py .
 COPY book_raw.md .
 COPY book.md* ./
+COPY chapters/ ./chapters/
+COPY skills/ ./skills/
 
 EXPOSE 8000
 
