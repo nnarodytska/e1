@@ -79,7 +79,7 @@ chapter_titles: list[str] = []
 skills_content: str = ""
 
 
-DB_PATH = "feedback.db"
+DB_PATH = os.path.join(os.environ.get("DATA_DIR", "."), "feedback.db")
 
 
 def init_db():
