@@ -336,25 +336,64 @@ HTML_PAGE = """<!DOCTYPE html>
     height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
   }
 
+  /* ── Header ── */
   header {
     background: #8B0000;
-    padding: 16px 24px;
+    padding: 12px 20px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    box-shadow: 0 2px 12px rgba(204,9,47,0.5);
+    gap: 12px;
+    box-shadow: 0 2px 12px rgba(139,0,0,0.5);
+    flex-shrink: 0;
+    z-index: 100;
   }
 
-  header h1 {
-    font-size: 21px;
+  #sidebar-toggle {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.85);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 3px 7px;
+    border-radius: 4px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  #sidebar-toggle:hover { background: rgba(255,255,255,0.15); }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .logo-mark {
+    background: #fff;
+    color: #8B0000;
+    font-weight: 900;
+    font-size: 13px;
+    padding: 3px 7px;
+    border-radius: 3px;
+    letter-spacing: -0.3px;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+  .logo-divider {
+    width: 1px;
+    height: 26px;
+    background: rgba(255,255,255,0.3);
+  }
+
+  .header-title {
+    flex: 1;
+    font-size: 18px;
     font-weight: 700;
     color: #fff;
-    letter-spacing: 0.3px;
   }
-
-  header h1 span { color: rgba(255,255,255,0.75); font-weight: 400; }
+  .header-title span { color: rgba(255,255,255,0.7); font-weight: 400; }
 
   #reset-btn {
     background: rgba(255,255,255,0.15);
@@ -364,9 +403,75 @@ HTML_PAGE = """<!DOCTYPE html>
     border-radius: 20px;
     cursor: pointer;
     font-size: 13px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  #reset-btn:hover { background: rgba(255,255,255,0.25); }
+
+  /* ── Layout ── */
+  #app-layout {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
   }
 
-  #reset-btn:hover { background: rgba(255,255,255,0.25); }
+  /* ── Sidebar ── */
+  #sidebar {
+    width: 230px;
+    flex-shrink: 0;
+    background: #0a0f14;
+    border-right: 1px solid #1e2a35;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: width 0.25s ease;
+  }
+  #sidebar.collapsed { width: 0; }
+
+  .sidebar-header {
+    padding: 12px 16px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #4a7a94;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    border-bottom: 1px solid #1e2a35;
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  #history-list {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 6px 0;
+  }
+  #history-list::-webkit-scrollbar { width: 3px; }
+  #history-list::-webkit-scrollbar-thumb { background: #1e2a35; border-radius: 2px; }
+
+  .history-item {
+    padding: 8px 14px;
+    font-size: 13px;
+    color: #7a8fa0;
+    cursor: pointer;
+    border-left: 2px solid transparent;
+    line-height: 1.35;
+    transition: all 0.12s;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .history-item:hover { color: #c8d9e6; background: #161b22; border-left-color: #005C8A; }
+  .history-item.active { color: #fff; background: #161b22; border-left-color: #8B0000; }
+
+  /* ── Main column ── */
+  #main-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
 
   #chat-container {
     flex: 1;
@@ -376,7 +481,10 @@ HTML_PAGE = """<!DOCTYPE html>
     flex-direction: column;
     gap: 20px;
   }
+  #chat-container::-webkit-scrollbar { width: 5px; }
+  #chat-container::-webkit-scrollbar-thumb { background: #1e2a35; border-radius: 3px; }
 
+  /* ── Messages ── */
   .message {
     max-width: 85%;
     line-height: 1.6;
@@ -388,8 +496,8 @@ HTML_PAGE = """<!DOCTYPE html>
     color: #fff;
     padding: 12px 18px;
     border-radius: 18px 18px 4px 18px;
-    font-size: 20px;
-    box-shadow: 0 4px 12px rgba(204,9,47,0.35);
+    font-size: 18px;
+    box-shadow: 0 4px 12px rgba(139,0,0,0.35);
   }
 
   .message.assistant {
@@ -398,61 +506,67 @@ HTML_PAGE = """<!DOCTYPE html>
     border: 1px solid #005C8A;
     padding: 18px 22px;
     border-radius: 4px 18px 18px 18px;
-    font-size: 19px;
+    font-size: 17px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    position: relative;
   }
 
   .message.assistant h1, .message.assistant h2, .message.assistant h3 {
-    margin-top: 16px;
-    margin-bottom: 8px;
-    color: #4da6d0;
+    margin-top: 16px; margin-bottom: 8px; color: #4da6d0;
   }
-
-  .message.assistant h1 { font-size: 23px; }
-  .message.assistant h2 { font-size: 21px; }
-  .message.assistant h3 { font-size: 20px; }
-
+  .message.assistant h1 { font-size: 21px; }
+  .message.assistant h2 { font-size: 19px; }
+  .message.assistant h3 { font-size: 18px; }
   .message.assistant p { margin: 8px 0; }
-
-  .message.assistant table {
-    border-collapse: collapse;
-    margin: 12px 0;
-    width: 100%;
-    font-size: 18px;
-  }
-
-  .message.assistant th, .message.assistant td {
-    border: 1px solid #005C8A;
-    padding: 8px 12px;
-    text-align: left;
-  }
-
+  .message.assistant table { border-collapse: collapse; margin: 12px 0; width: 100%; font-size: 16px; }
+  .message.assistant th, .message.assistant td { border: 1px solid #005C8A; padding: 8px 12px; text-align: left; }
   .message.assistant th { background: #002d44; color: #7ecff0; }
-
-  .message.assistant code {
-    background: #002d44;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 18px;
-    color: #7ecff0;
-  }
-
-  .message.assistant blockquote {
-    border-left: 3px solid #4a1a1a;
-    padding-left: 14px;
-    margin: 10px 0;
-    color: #94a3b8;
-    font-style: italic;
-  }
-
-  .message.assistant ul, .message.assistant ol {
-    margin: 8px 0 8px 20px;
-  }
-
+  .message.assistant code { background: #002d44; padding: 2px 6px; border-radius: 4px; font-size: 16px; color: #7ecff0; }
+  .message.assistant blockquote { border-left: 3px solid #4a1a1a; padding-left: 14px; margin: 10px 0; color: #94a3b8; font-style: italic; }
+  .message.assistant ul, .message.assistant ol { margin: 8px 0 8px 20px; }
   .message.assistant li { margin: 4px 0; }
-
   .message.assistant strong { color: #f1f5f9; }
 
+  /* ── Copy button ── */
+  .copy-btn {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    background: #0d1117;
+    border: 1px solid #1e2a35;
+    color: #4a7a94;
+    padding: 3px 9px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    opacity: 0;
+    transition: opacity 0.15s, background 0.15s;
+  }
+  .message.assistant:hover .copy-btn { opacity: 1; }
+  .copy-btn:hover { background: #1e2a35; color: #e2e8f0; border-color: #005C8A; }
+  .copy-btn.copied { color: #22c55e; border-color: #22c55e; opacity: 1; background: rgba(34,197,94,0.08); }
+
+  /* ── Pulsing dots loading ── */
+  .typing-dots {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 0;
+  }
+  .typing-dots span {
+    width: 9px; height: 9px;
+    background: #4da6d0;
+    border-radius: 50%;
+    animation: tdot 1.3s ease-in-out infinite;
+  }
+  .typing-dots span:nth-child(2) { animation-delay: 0.22s; }
+  .typing-dots span:nth-child(3) { animation-delay: 0.44s; }
+  @keyframes tdot {
+    0%, 80%, 100% { transform: scale(0.55); opacity: 0.35; }
+    40% { transform: scale(1.1); opacity: 1; }
+  }
+
+  /* ── Input area ── */
   #input-area {
     background: #161b22;
     border-top: 1px solid #1e2a35;
@@ -462,259 +576,188 @@ HTML_PAGE = """<!DOCTYPE html>
     gap: 10px;
   }
 
-  #image-preview-bar {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
+  #image-preview-bar { display: flex; gap: 8px; flex-wrap: wrap; }
 
   .image-preview {
-    position: relative;
-    width: 64px;
-    height: 64px;
-    border-radius: 8px;
-    overflow: hidden;
-    border: 1px solid #005C8A;
+    position: relative; width: 64px; height: 64px;
+    border-radius: 8px; overflow: hidden; border: 1px solid #005C8A;
   }
-
-  .image-preview img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
+  .image-preview img { width: 100%; height: 100%; object-fit: cover; }
   .image-preview .remove-img {
-    position: absolute;
-    top: 2px;
-    right: 2px;
-    background: rgba(0,0,0,0.7);
-    color: #fff;
-    border: none;
-    border-radius: 50%;
-    width: 18px;
-    height: 18px;
-    font-size: 11px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
+    position: absolute; top: 2px; right: 2px;
+    background: rgba(0,0,0,0.7); color: #fff; border: none;
+    border-radius: 50%; width: 18px; height: 18px; font-size: 11px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1;
   }
 
-  #input-row {
-    display: flex;
-    gap: 12px;
-  }
+  #input-row { display: flex; gap: 12px; }
 
   #upload-btn {
-    background: #002d44;
-    color: #7ecff0;
-    border: 1px solid #005C8A;
-    padding: 12px 14px;
-    border-radius: 12px;
-    cursor: pointer;
-    font-size: 18px;
-    display: flex;
-    align-items: center;
+    background: #002d44; color: #7ecff0; border: 1px solid #005C8A;
+    padding: 12px 14px; border-radius: 12px; cursor: pointer;
+    font-size: 18px; display: flex; align-items: center; flex-shrink: 0;
   }
-
   #upload-btn:hover { background: #005C8A; color: #fff; }
 
   #input {
-    flex: 1;
-    background: #0d1117;
-    border: 1px solid #005C8A;
-    color: #e2e8f0;
-    padding: 12px 18px;
-    border-radius: 12px;
-    font-size: 20px;
-    outline: none;
-    font-family: inherit;
-    resize: none;
-    min-height: 80px;
-    max-height: 200px;
-    overflow-y: auto;
-    line-height: 1.5;
+    flex: 1; background: #0d1117; border: 1px solid #005C8A;
+    color: #e2e8f0; padding: 12px 18px; border-radius: 12px;
+    font-size: 20px; outline: none; font-family: inherit;
+    resize: none; min-height: 80px; max-height: 200px;
+    overflow-y: auto; line-height: 1.5;
   }
-
   #input::placeholder { color: #4a7a94; }
-  #input:focus { border-color: #8B0000; box-shadow: 0 0 0 3px rgba(204,9,47,0.15); }
+  #input:focus { border-color: #8B0000; box-shadow: 0 0 0 3px rgba(139,0,0,0.15); }
 
   #send-btn {
-    background: #8B0000;
-    color: #fff;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 12px;
-    cursor: pointer;
-    font-size: 20px;
-    font-weight: 600;
-    box-shadow: 0 4px 12px rgba(204,9,47,0.4);
-    transition: all 0.2s;
+    background: #8B0000; color: #fff; border: none;
+    padding: 12px 24px; border-radius: 12px; cursor: pointer;
+    font-size: 20px; font-weight: 600;
+    box-shadow: 0 4px 12px rgba(139,0,0,0.4);
+    transition: all 0.2s; flex-shrink: 0;
   }
-
   #send-btn:hover { background: #6b0000; transform: translateY(-1px); }
   #send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-  .message.user .user-images {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 8px;
-    flex-wrap: wrap;
-  }
+  .message.user .user-images { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .message.user .user-images img { max-width: 200px; max-height: 150px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); }
 
-  .message.user .user-images img {
-    max-width: 200px;
-    max-height: 150px;
-    border-radius: 8px;
-    border: 1px solid rgba(255,255,255,0.2);
-  }
-
-  .typing-indicator {
-    display: inline-block;
-    color: #4da6d0;
-    font-style: italic;
-    font-size: 13px;
-  }
-
-  #welcome {
-    text-align: center;
-    margin: auto;
-    max-width: 600px;
-    color: #94a3b8;
-  }
-
+  /* ── Welcome screen ── */
+  #welcome { text-align: center; margin: auto; max-width: 600px; color: #94a3b8; }
   #welcome h2 { color: #fff; margin-bottom: 12px; font-size: 27px; font-weight: 700; }
   #welcome p { margin: 8px 0; font-size: 19px; line-height: 1.6; color: #94a3b8; }
 
-  .example-questions {
-    margin-top: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    width: 100%;
-  }
-
+  .example-questions { margin-top: 20px; display: flex; flex-direction: column; gap: 8px; width: 100%; }
   .example-q {
-    background: #161b22;
-    border: 1px solid #005C8A;
-    padding: 10px 16px;
-    border-radius: 10px;
-    cursor: pointer;
-    text-align: left;
-    font-size: 18px;
-    color: #7ecff0;
-    position: relative;
-    z-index: 10;
-    user-select: none;
-    transition: all 0.15s;
+    background: #161b22; border: 1px solid #005C8A; padding: 10px 16px;
+    border-radius: 10px; cursor: pointer; text-align: left; font-size: 18px;
+    color: #7ecff0; position: relative; z-index: 10; user-select: none; transition: all 0.15s;
   }
-
   .example-q:hover { border-color: #8B0000; color: #fff; background: #1e0509; }
 
+  /* ── Feedback ── */
   .feedback-bar {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 14px;
-    padding-top: 10px;
-    border-top: 1px solid #005C8A;
+    display: flex; align-items: center; gap: 8px;
+    margin-top: 14px; padding-top: 10px; border-top: 1px solid #005C8A;
   }
-
   .feedback-bar button {
-    background: none;
-    border: 1px solid #005C8A;
-    border-radius: 6px;
-    padding: 4px 10px;
-    cursor: pointer;
-    font-size: 16px;
-    color: #4da6d0;
-    transition: all 0.15s;
+    background: none; border: 1px solid #005C8A; border-radius: 6px;
+    padding: 4px 10px; cursor: pointer; font-size: 16px;
+    color: #4da6d0; transition: all 0.15s;
   }
-
   .feedback-bar button:hover { border-color: #8B0000; color: #fff; }
   .feedback-bar button.selected-up { border-color: #22c55e; color: #22c55e; background: rgba(34,197,94,0.1); }
   .feedback-bar button.selected-down { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.1); }
+  .feedback-bar .feedback-label { font-size: 12px; color: #4a7a94; }
+  .feedback-bar .feedback-thanks { font-size: 12px; color: #22c55e; }
 
-  .feedback-bar .feedback-label {
-    font-size: 12px;
-    color: #4a7a94;
-  }
-
-  .feedback-bar .feedback-thanks {
-    font-size: 12px;
-    color: #22c55e;
-  }
-
-  .feedback-comment-box {
-    margin-top: 8px;
-    display: flex;
-    gap: 8px;
-  }
-
+  .feedback-comment-box { margin-top: 8px; display: flex; gap: 8px; }
   .feedback-comment-box input {
-    flex: 1;
-    background: #0f172a;
-    border: 1px solid #475569;
-    color: #e2e8f0;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 13px;
-    outline: none;
-    font-family: inherit;
+    flex: 1; background: #0f172a; border: 1px solid #475569;
+    color: #e2e8f0; padding: 6px 12px; border-radius: 6px;
+    font-size: 13px; outline: none; font-family: inherit;
   }
-
   .feedback-comment-box input:focus { border-color: #ef4444; }
-
   .feedback-comment-box button {
-    background: #334155;
-    color: #94a3b8;
-    border: 1px solid #475569;
-    padding: 6px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 13px;
+    background: #334155; color: #94a3b8; border: 1px solid #475569;
+    padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px;
   }
-
   .feedback-comment-box button:hover { background: #475569; color: #e2e8f0; }
+
+  /* ── Mobile ── */
+  @media (max-width: 768px) {
+    #sidebar {
+      position: fixed;
+      top: 52px; left: 0;
+      height: calc(100vh - 52px);
+      z-index: 200;
+      width: 240px !important;
+      transform: translateX(-100%);
+      transition: transform 0.25s ease;
+      border-right: 1px solid #1e2a35;
+    }
+    #sidebar.open { transform: translateX(0); width: 240px !important; }
+    #chat-container { padding: 14px; }
+    #input-area { padding: 10px 14px; }
+    .message { max-width: 96%; }
+    #send-btn { padding: 12px 14px; }
+    .logo-mark { display: none; }
+    .logo-divider { display: none; }
+  }
 </style>
 </head>
 <body>
 
 <header>
-  <h1><span>VMware Metrics</span> Q&A</h1>
-  <button id="reset-btn" onclick="resetChat()">New Chat</button>
+  <button id="sidebar-toggle" onclick="toggleSidebar()" title="Toggle history">&#9776;</button>
+  <div class="logo">
+    <div class="logo-mark">BROADCOM</div>
+    <div class="logo-divider"></div>
+  </div>
+  <div class="header-title"><span>VMware Metrics</span> Q&amp;A</div>
+  <button id="reset-btn" onclick="resetChat()">+ New Chat</button>
 </header>
 
-<div id="chat-container">
-  <div id="welcome">
-    <h2>VMware vSphere Metrics Expert</h2>
-    <p>Ask any question about VMware vSphere metrics. Answers are grounded in the authoritative book with full reasoning chains preserved.</p>
-    <div class="example-questions" style="margin-top: 16px;">
-      <div class="example-q" onclick="askExample(this)">My VM is slow and I see high CPU Ready. Help me troubleshoot.</div>
-      <div class="example-q" onclick="askExample(this)">What is the difference between CPU Ready and CPU Contention?</div>
-      <div class="example-q" onclick="askExample(this)">What is the difference between Usage and Utilization?</div>
-      <div class="example-q" onclick="askExample(this)">Why is VM CPU Demand lower than VM CPU Usage?</div>
-      <div class="example-q" onclick="askExample(this)">Explain CPU Usage across VM, ESXi, and Cluster levels</div>
-      <div class="example-q" onclick="askExample(this)">What is the impact of Hyper-Threading on CPU metrics?</div>
+<div id="app-layout">
+  <aside id="sidebar">
+    <div class="sidebar-header">Chat History</div>
+    <div id="history-list"></div>
+  </aside>
+  <div id="main-col">
+    <div id="chat-container">
+      <div id="welcome">
+        <h2>VMware vSphere Metrics Expert</h2>
+        <p>Ask any question about VMware vSphere metrics. Answers are grounded in the authoritative book with full reasoning chains preserved.</p>
+        <div class="example-questions" style="margin-top: 16px;">
+          <div class="example-q" onclick="askExample(this)">My VM is slow and I see high CPU Ready. Help me troubleshoot.</div>
+          <div class="example-q" onclick="askExample(this)">What is the difference between CPU Ready and CPU Contention?</div>
+          <div class="example-q" onclick="askExample(this)">What is the difference between Usage and Utilization?</div>
+          <div class="example-q" onclick="askExample(this)">Why is VM CPU Demand lower than VM CPU Usage?</div>
+          <div class="example-q" onclick="askExample(this)">Explain CPU Usage across VM, ESXi, and Cluster levels</div>
+          <div class="example-q" onclick="askExample(this)">What is the impact of Hyper-Threading on CPU metrics?</div>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
-
-<div id="input-area">
-  <div id="image-preview-bar"></div>
-  <div id="input-row">
-    <button id="upload-btn" onclick="document.getElementById('file-input').click()" title="Upload screenshot">&#128247;</button>
-    <input type="file" id="file-input" accept="image/*" multiple style="display:none" onchange="handleFiles(this.files)">
-    <textarea id="input" placeholder="Ask about VMware metrics... (paste or upload screenshots)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}" onpaste="handlePaste(event)" rows="3"></textarea>
-    <button id="send-btn" onclick="sendMessage()">Send</button>
+    <div id="input-area">
+      <div id="image-preview-bar"></div>
+      <div id="input-row">
+        <button id="upload-btn" onclick="document.getElementById('file-input').click()" title="Upload screenshot">&#128247;</button>
+        <input type="file" id="file-input" accept="image/*" multiple style="display:none" onchange="handleFiles(this.files)">
+        <textarea id="input" placeholder="Ask about VMware metrics... (paste or upload screenshots)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}" onpaste="handlePaste(event)" rows="3"></textarea>
+        <button id="send-btn" onclick="sendMessage()">Send</button>
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
 const sessionId = crypto.randomUUID();
 let isStreaming = false;
-let pendingImages = []; // [{data: base64, media_type: "image/png", dataUrl: "data:..."}]
+let pendingImages = [];
+let msgCount = 0;
+
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  if (window.innerWidth <= 768) {
+    sidebar.classList.toggle('open');
+  } else {
+    sidebar.classList.toggle('collapsed');
+  }
+}
+
+function addToHistory(text, targetEl) {
+  const list = document.getElementById('history-list');
+  const item = document.createElement('div');
+  item.className = 'history-item';
+  item.textContent = text.length > 44 ? text.slice(0, 44) + '\u2026' : text;
+  item.addEventListener('click', () => {
+    list.querySelectorAll('.history-item').forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+    targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  list.appendChild(item);
+  return item;
+}
 
 function askExample(el) {
   document.getElementById('input').value = el.textContent;
@@ -776,13 +819,13 @@ async function sendMessage() {
   isStreaming = true;
   document.getElementById('send-btn').disabled = true;
 
-  // Remove welcome
   const welcome = document.getElementById('welcome');
   if (welcome) welcome.remove();
 
   const chat = document.getElementById('chat-container');
+  msgCount++;
 
-  // Add user message with images
+  // User message
   const userDiv = document.createElement('div');
   userDiv.className = 'message user';
   if (imagesToSend.length > 0) {
@@ -802,10 +845,13 @@ async function sendMessage() {
   }
   chat.appendChild(userDiv);
 
-  // Add assistant message placeholder
+  // Add to sidebar history
+  addToHistory(message || '(screenshot)', userDiv);
+
+  // Assistant placeholder with pulsing dots
   const assistantDiv = document.createElement('div');
   assistantDiv.className = 'message assistant';
-  assistantDiv.innerHTML = '<span class="typing-indicator">Analyzing...</span>';
+  assistantDiv.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
   chat.appendChild(assistantDiv);
   chat.scrollTop = chat.scrollHeight;
 
@@ -837,7 +883,20 @@ async function sendMessage() {
     assistantDiv.innerHTML = '<p style="color:#ef4444">Error: Could not get response. Please try again.</p>';
   }
 
-  // Add feedback bar
+  // Copy button
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'copy-btn';
+  copyBtn.textContent = 'Copy';
+  copyBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(fullText).then(() => {
+      copyBtn.textContent = 'Copied!';
+      copyBtn.classList.add('copied');
+      setTimeout(() => { copyBtn.textContent = 'Copy'; copyBtn.classList.remove('copied'); }, 2000);
+    });
+  });
+  assistantDiv.appendChild(copyBtn);
+
+  // Feedback bar
   const msgId = crypto.randomUUID();
   const feedbackBar = document.createElement('div');
   feedbackBar.className = 'feedback-bar';
@@ -873,13 +932,11 @@ function submitFeedback(btn, rating) {
   const question = bar._question;
   const answer = bar._answer;
 
-  // Highlight selected button
   const buttons = bar.querySelectorAll('button');
   buttons.forEach(b => b.classList.remove('selected-up', 'selected-down'));
   btn.classList.add(rating === 'up' ? 'selected-up' : 'selected-down');
 
   if (rating === 'up') {
-    // Submit immediately
     bar.dataset.submitted = 'true';
     fetch('/api/feedback', {
       method: 'POST',
@@ -890,7 +947,6 @@ function submitFeedback(btn, rating) {
     label.className = 'feedback-thanks';
     label.textContent = 'Thanks for the feedback!';
   } else {
-    // Show comment box
     let commentBox = bar.parentElement.querySelector('.feedback-comment-box');
     if (!commentBox) {
       commentBox = document.createElement('div');
@@ -944,6 +1000,8 @@ function resetChat() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ session_id: sessionId }),
   });
+  document.getElementById('history-list').innerHTML = '';
+  msgCount = 0;
   const chat = document.getElementById('chat-container');
   chat.innerHTML = `
     <div id="welcome">
