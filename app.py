@@ -331,7 +331,7 @@ HTML_PAGE = """<!DOCTYPE html>
 
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: #0f172a;
+    background: #0d1117;
     color: #e2e8f0;
     height: 100vh;
     display: flex;
@@ -339,33 +339,34 @@ HTML_PAGE = """<!DOCTYPE html>
   }
 
   header {
-    background: #1e293b;
-    border-bottom: 1px solid #334155;
+    background: #8B0000;
     padding: 16px 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    box-shadow: 0 2px 12px rgba(204,9,47,0.5);
   }
 
   header h1 {
-    font-size: 18px;
-    font-weight: 600;
-    color: #f1f5f9;
+    font-size: 21px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.3px;
   }
 
-  header h1 span { color: #60a5fa; }
+  header h1 span { color: rgba(255,255,255,0.75); font-weight: 400; }
 
   #reset-btn {
-    background: #334155;
-    color: #94a3b8;
-    border: 1px solid #475569;
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.35);
     padding: 6px 14px;
-    border-radius: 6px;
+    border-radius: 20px;
     cursor: pointer;
     font-size: 13px;
   }
 
-  #reset-btn:hover { background: #475569; color: #e2e8f0; }
+  #reset-btn:hover { background: rgba(255,255,255,0.25); }
 
   #chat-container {
     flex: 1;
@@ -383,31 +384,33 @@ HTML_PAGE = """<!DOCTYPE html>
 
   .message.user {
     align-self: flex-end;
-    background: #1d4ed8;
+    background: #8B0000;
     color: #fff;
     padding: 12px 18px;
     border-radius: 18px 18px 4px 18px;
-    font-size: 15px;
+    font-size: 20px;
+    box-shadow: 0 4px 12px rgba(204,9,47,0.35);
   }
 
   .message.assistant {
     align-self: flex-start;
-    background: #1e293b;
-    border: 1px solid #334155;
+    background: #161b22;
+    border: 1px solid #005C8A;
     padding: 18px 22px;
     border-radius: 4px 18px 18px 18px;
-    font-size: 14px;
+    font-size: 19px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   }
 
   .message.assistant h1, .message.assistant h2, .message.assistant h3 {
     margin-top: 16px;
     margin-bottom: 8px;
-    color: #93c5fd;
+    color: #4da6d0;
   }
 
-  .message.assistant h1 { font-size: 18px; }
-  .message.assistant h2 { font-size: 16px; }
-  .message.assistant h3 { font-size: 15px; }
+  .message.assistant h1 { font-size: 23px; }
+  .message.assistant h2 { font-size: 21px; }
+  .message.assistant h3 { font-size: 20px; }
 
   .message.assistant p { margin: 8px 0; }
 
@@ -415,26 +418,27 @@ HTML_PAGE = """<!DOCTYPE html>
     border-collapse: collapse;
     margin: 12px 0;
     width: 100%;
-    font-size: 13px;
+    font-size: 18px;
   }
 
   .message.assistant th, .message.assistant td {
-    border: 1px solid #475569;
+    border: 1px solid #005C8A;
     padding: 8px 12px;
     text-align: left;
   }
 
-  .message.assistant th { background: #334155; color: #93c5fd; }
+  .message.assistant th { background: #002d44; color: #7ecff0; }
 
   .message.assistant code {
-    background: #334155;
+    background: #002d44;
     padding: 2px 6px;
     border-radius: 4px;
-    font-size: 13px;
+    font-size: 18px;
+    color: #7ecff0;
   }
 
   .message.assistant blockquote {
-    border-left: 3px solid #60a5fa;
+    border-left: 3px solid #4a1a1a;
     padding-left: 14px;
     margin: 10px 0;
     color: #94a3b8;
@@ -450,8 +454,8 @@ HTML_PAGE = """<!DOCTYPE html>
   .message.assistant strong { color: #f1f5f9; }
 
   #input-area {
-    background: #1e293b;
-    border-top: 1px solid #334155;
+    background: #161b22;
+    border-top: 1px solid #1e2a35;
     padding: 16px 24px;
     display: flex;
     flex-direction: column;
@@ -470,7 +474,7 @@ HTML_PAGE = """<!DOCTYPE html>
     height: 64px;
     border-radius: 8px;
     overflow: hidden;
-    border: 1px solid #475569;
+    border: 1px solid #005C8A;
   }
 
   .image-preview img {
@@ -503,9 +507,9 @@ HTML_PAGE = """<!DOCTYPE html>
   }
 
   #upload-btn {
-    background: #334155;
-    color: #94a3b8;
-    border: 1px solid #475569;
+    background: #002d44;
+    color: #7ecff0;
+    border: 1px solid #005C8A;
     padding: 12px 14px;
     border-radius: 12px;
     cursor: pointer;
@@ -514,16 +518,16 @@ HTML_PAGE = """<!DOCTYPE html>
     align-items: center;
   }
 
-  #upload-btn:hover { background: #475569; color: #e2e8f0; }
+  #upload-btn:hover { background: #005C8A; color: #fff; }
 
   #input {
     flex: 1;
-    background: #0f172a;
-    border: 1px solid #334155;
+    background: #0d1117;
+    border: 1px solid #005C8A;
     color: #e2e8f0;
     padding: 12px 18px;
     border-radius: 12px;
-    font-size: 15px;
+    font-size: 20px;
     outline: none;
     font-family: inherit;
     resize: none;
@@ -533,21 +537,24 @@ HTML_PAGE = """<!DOCTYPE html>
     line-height: 1.5;
   }
 
-  #input:focus { border-color: #60a5fa; }
+  #input::placeholder { color: #4a7a94; }
+  #input:focus { border-color: #8B0000; box-shadow: 0 0 0 3px rgba(204,9,47,0.15); }
 
   #send-btn {
-    background: #2563eb;
+    background: #8B0000;
     color: #fff;
     border: none;
     padding: 12px 24px;
     border-radius: 12px;
     cursor: pointer;
-    font-size: 15px;
-    font-weight: 500;
+    font-size: 20px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(204,9,47,0.4);
+    transition: all 0.2s;
   }
 
-  #send-btn:hover { background: #1d4ed8; }
-  #send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  #send-btn:hover { background: #6b0000; transform: translateY(-1px); }
+  #send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
   .message.user .user-images {
     display: flex;
@@ -565,7 +572,7 @@ HTML_PAGE = """<!DOCTYPE html>
 
   .typing-indicator {
     display: inline-block;
-    color: #64748b;
+    color: #4da6d0;
     font-style: italic;
     font-size: 13px;
   }
@@ -574,11 +581,11 @@ HTML_PAGE = """<!DOCTYPE html>
     text-align: center;
     margin: auto;
     max-width: 600px;
-    color: #64748b;
+    color: #94a3b8;
   }
 
-  #welcome h2 { color: #93c5fd; margin-bottom: 12px; font-size: 20px; }
-  #welcome p { margin: 8px 0; font-size: 14px; line-height: 1.6; }
+  #welcome h2 { color: #fff; margin-bottom: 12px; font-size: 27px; font-weight: 700; }
+  #welcome p { margin: 8px 0; font-size: 19px; line-height: 1.6; color: #94a3b8; }
 
   .example-questions {
     margin-top: 20px;
@@ -589,20 +596,21 @@ HTML_PAGE = """<!DOCTYPE html>
   }
 
   .example-q {
-    background: #1e293b;
-    border: 1px solid #334155;
+    background: #161b22;
+    border: 1px solid #005C8A;
     padding: 10px 16px;
     border-radius: 10px;
     cursor: pointer;
     text-align: left;
-    font-size: 13px;
-    color: #94a3b8;
+    font-size: 18px;
+    color: #7ecff0;
     position: relative;
     z-index: 10;
     user-select: none;
+    transition: all 0.15s;
   }
 
-  .example-q:hover { border-color: #60a5fa; color: #e2e8f0; }
+  .example-q:hover { border-color: #8B0000; color: #fff; background: #1e0509; }
 
   .feedback-bar {
     display: flex;
@@ -610,27 +618,27 @@ HTML_PAGE = """<!DOCTYPE html>
     gap: 8px;
     margin-top: 14px;
     padding-top: 10px;
-    border-top: 1px solid #334155;
+    border-top: 1px solid #005C8A;
   }
 
   .feedback-bar button {
     background: none;
-    border: 1px solid #475569;
+    border: 1px solid #005C8A;
     border-radius: 6px;
     padding: 4px 10px;
     cursor: pointer;
     font-size: 16px;
-    color: #94a3b8;
+    color: #4da6d0;
     transition: all 0.15s;
   }
 
-  .feedback-bar button:hover { border-color: #60a5fa; color: #e2e8f0; }
+  .feedback-bar button:hover { border-color: #8B0000; color: #fff; }
   .feedback-bar button.selected-up { border-color: #22c55e; color: #22c55e; background: rgba(34,197,94,0.1); }
   .feedback-bar button.selected-down { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.1); }
 
   .feedback-bar .feedback-label {
     font-size: 12px;
-    color: #64748b;
+    color: #4a7a94;
   }
 
   .feedback-bar .feedback-thanks {
