@@ -83,6 +83,7 @@ DB_PATH = os.path.join(os.environ.get("DATA_DIR", "."), "feedback.db")
 
 
 def init_db():
+    os.makedirs(os.path.dirname(DB_PATH) or ".", exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
     conn.execute("""
         CREATE TABLE IF NOT EXISTS feedback (
