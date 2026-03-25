@@ -526,6 +526,11 @@ HTML_PAGE = """<!DOCTYPE html>
     font-size: 15px;
     outline: none;
     font-family: inherit;
+    resize: none;
+    min-height: 80px;
+    max-height: 200px;
+    overflow-y: auto;
+    line-height: 1.5;
   }
 
   #input:focus { border-color: #60a5fa; }
@@ -693,7 +698,7 @@ HTML_PAGE = """<!DOCTYPE html>
   <div id="input-row">
     <button id="upload-btn" onclick="document.getElementById('file-input').click()" title="Upload screenshot">&#128247;</button>
     <input type="file" id="file-input" accept="image/*" multiple style="display:none" onchange="handleFiles(this.files)">
-    <input type="text" id="input" placeholder="Ask about VMware metrics... (paste or upload screenshots)" onkeydown="if(event.key==='Enter')sendMessage()" onpaste="handlePaste(event)">
+    <textarea id="input" placeholder="Ask about VMware metrics... (paste or upload screenshots)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}" onpaste="handlePaste(event)" rows="3"></textarea>
     <button id="send-btn" onclick="sendMessage()">Send</button>
   </div>
 </div>
