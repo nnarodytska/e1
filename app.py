@@ -278,6 +278,38 @@ async def feedback(request: Request):
     return {"ok": True}
 
 
+@app.get("/feedback", response_class=HTMLResponse)
+async def feedback_page(request: Request, key: str = ""):
+    secret = os.environ.get("FEEDBACK_KEY", "")
+    if secret and key != secret:
+        return HTMLResponse("<h3>Unauthorized</h3>", status_code=401)
+    conn = sqlite3.connect(DB_PATH)
+    rows = conn.execute(
+        "SELECT created_at, rating, comment, substr(question,1,120) FROM feedback ORDER BY created_at DESC"
+    ).fetchall()
+    conn.close()
+    total = len(rows)
+    up = sum(1 for r in rows if r[1] == "up")
+    down = total - up
+    rows_html = "".join(
+        f"<tr><td>{r[0][:16]}</td><td>{'👍' if r[1]=='up' else '👎'}</td><td>{r[2] or ''}</td><td>{r[3]}</td></tr>"
+        for r in rows
+    )
+    html = f"""<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>Feedback</title>
+<style>body{{font-family:sans-serif;padding:24px;background:#0f172a;color:#e2e8f0}}
+h1{{color:#60a5fa}}table{{border-collapse:collapse;width:100%;font-size:13px}}
+th,td{{border:1px solid #334155;padding:8px 12px;text-align:left;vertical-align:top}}
+th{{background:#1e293b;color:#93c5fd}}.summary{{margin-bottom:16px;color:#94a3b8}}</style>
+</head><body>
+<h1>Feedback</h1>
+<div class="summary">Total: {total} &nbsp;|&nbsp; 👍 {up} &nbsp;|&nbsp; 👎 {down}</div>
+<table><tr><th>Time</th><th>Rating</th><th>Comment</th><th>Question</th></tr>
+{rows_html or '<tr><td colspan=4>No feedback yet</td></tr>'}
+</table></body></html>"""
+    return HTMLResponse(html)
+
+
 @app.post("/api/reset")
 async def reset(request: Request):
     body = await request.json()
