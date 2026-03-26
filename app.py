@@ -80,10 +80,12 @@ skills_content: str = ""
 
 
 DB_PATH = os.path.join(os.environ.get("DATA_DIR", "."), "feedback.db")
+IMAGES_DIR = os.path.join(os.environ.get("DATA_DIR", "."), "images")
 
 
 def init_db():
     os.makedirs(os.path.dirname(DB_PATH) or ".", exist_ok=True)
+    os.makedirs(IMAGES_DIR, exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
     conn.execute("""
         CREATE TABLE IF NOT EXISTS feedback (
@@ -105,6 +107,7 @@ def init_db():
             question TEXT NOT NULL,
             answer TEXT NOT NULL,
             chapters TEXT NOT NULL DEFAULT '',
+            images TEXT NOT NULL DEFAULT '',
             created_at TEXT NOT NULL
         )
     """)
@@ -214,6 +217,17 @@ async def chat(request: Request):
     if session_id not in sessions:
         sessions[session_id] = []
 
+    # Save uploaded images to disk
+    import base64 as _b64
+    saved_images = []
+    for i, img in enumerate(images):
+        ext = img.get("media_type", "image/png").split("/")[-1]
+        fname = f"{message_id}_{i}.{ext}"
+        fpath = os.path.join(IMAGES_DIR, fname)
+        with open(fpath, "wb") as f:
+            f.write(_b64.b64decode(img["data"]))
+        saved_images.append(fname)
+
     # Build user content with optional images
     user_content = []
     for img in images:
@@ -275,8 +289,8 @@ async def chat(request: Request):
         # Persist conversation turn
         conn = sqlite3.connect(DB_PATH)
         conn.execute(
-            "INSERT INTO conversations (session_id, message_id, question, answer, chapters, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-            (session_id, message_id, message[:3000], answer_text, ", ".join(selected), datetime.now(timezone.utc).isoformat()),
+            "INSERT INTO conversations (session_id, message_id, question, answer, chapters, images, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (session_id, message_id, message[:3000], answer_text, ", ".join(selected), ", ".join(saved_images), datetime.now(timezone.utc).isoformat()),
         )
         conn.commit()
         conn.close()
@@ -416,7 +430,11 @@ async function expand(row, sid) {{
   dialog.innerHTML = turns.map((t,i) => {{
     const rating = t.rating === 'up' ? ' 👍' : t.rating === 'down' ? ' 👎' : '';
     const comment = t.comment ? ` — ${{t.comment}}` : '';
+    const imgs = (t.images || '').split(',').map(s => s.trim()).filter(Boolean)
+      .map(f => `<a href="/images/${{f}}" target="_blank"><img src="/images/${{f}}" style="height:80px;border-radius:4px;border:1px solid #1e3a5f;margin-right:6px"></a>`)
+      .join('');
     return `<div class="turn">
+      ${{imgs ? `<div style="margin-bottom:8px">${{imgs}}</div>` : ''}}
       <div class="turn-q">Q${{i+1}}: ${{esc(t.question)}}</div>
       <div class="turn-a">${{esc(t.answer)}}</div>
       <div class="turn-meta">${{t.created_at}}${{rating}}${{comment}}</div>
@@ -457,14 +475,14 @@ async def get_sessions():
 async def get_session(session_id: str):
     conn = sqlite3.connect(DB_PATH)
     rows = conn.execute(
-        """SELECT c.question, c.answer, c.created_at, f.rating, f.comment
+        """SELECT c.question, c.answer, c.created_at, f.rating, f.comment, c.images
            FROM conversations c
            LEFT JOIN feedback f ON f.message_id = c.message_id
            WHERE c.session_id=? ORDER BY c.created_at ASC""",
         (session_id,),
     ).fetchall()
     conn.close()
-    return [{"question": r[0], "answer": r[1], "created_at": r[2][:16], "rating": r[3], "comment": r[4]} for r in rows]
+    return [{"question": r[0], "answer": r[1], "created_at": r[2][:16], "rating": r[3], "comment": r[4], "images": r[5]} for r in rows]
 
 
 @app.get("/export-json")
@@ -504,6 +522,14 @@ async def export_json(request: Request, key: str = "", rated: str = ""):
         })
 
     return JSONResponse(list(sessions_map.values()))
+
+
+@app.get("/images/{filename}")
+async def serve_image(filename: str):
+    fpath = os.path.join(IMAGES_DIR, filename)
+    if not os.path.exists(fpath):
+        return HTMLResponse("Not found", status_code=404)
+    return FileResponse(fpath)
 
 
 @app.get("/export-db")
