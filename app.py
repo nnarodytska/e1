@@ -248,15 +248,21 @@ async def chat(request: Request):
     # Stage 2: Answer with selected chapters
     def generate():
         full_response = []
-        with client.messages.stream(
-            model=MODEL,
-            max_tokens=4096,
-            system=system,
-            messages=sessions[session_id],
-        ) as stream:
-            for text in stream.text_stream:
-                full_response.append(text)
-                yield text
+        try:
+            with client.messages.stream(
+                model=MODEL,
+                max_tokens=4096,
+                system=system,
+                messages=sessions[session_id],
+            ) as stream:
+                for text in stream.text_stream:
+                    full_response.append(text)
+                    yield text
+        except anthropic.BadRequestError as e:
+            if "context_window" in str(e).lower() or "too long" in str(e).lower():
+                yield "\n\n---\n⚠️ **This conversation has reached the context limit.** Please start a **New Chat** to continue.\n\n__CONTEXT_LIMIT__"
+                return
+            raise
 
         answer_text = "".join(full_response)
         sessions[session_id].append({"role": "assistant", "content": answer_text})
@@ -348,19 +354,23 @@ async def conversations_page(request: Request, key: str = "", session: str = "")
     sessions_count = conn.execute("SELECT COUNT(DISTINCT session_id) FROM conversations").fetchone()[0]
     conn.close()
 
-    key_qs = f"?key={key}" if key else ""
+    def session_url(sid):
+        parts = []
+        if key:
+            parts.append(f"key={key}")
+        parts.append(f"session={sid}")
+        return "/conversations?" + "&".join(parts)
 
     rows_html = ""
     for r in rows:
         rid, sid, q, ans, chaps, ts = r
         sid_short = sid[:8]
         q_preview = q[:120].replace("<", "&lt;").replace(">", "&gt;")
-        ans_preview = ans[:200].replace("<", "&lt;").replace(">", "&gt;")
         ans_full = ans.replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br>")
         rows_html += f"""
         <tr onclick="toggle({rid})" style="cursor:pointer">
           <td>{ts[:16]}</td>
-          <td><a href="/conversations{key_qs}&amp;session={sid}" style="color:#60a5fa;text-decoration:none">{sid_short}…</a></td>
+          <td><a href="{session_url(sid)}" style="color:#60a5fa;text-decoration:none" onclick="event.stopPropagation()">{sid_short}…</a></td>
           <td style="color:#94a3b8;font-size:11px">{chaps[:60]}</td>
           <td>{q_preview}{'…' if len(q)>120 else ''}</td>
         </tr>
@@ -391,7 +401,7 @@ function toggle(id){{
 }}
 </script>
 </head><body>
-<a class="back" href="/conversations{key_qs}">&larr; All sessions</a>
+<a class="back" href="/conversations{'?key='+key if key else ''}">&larr; All sessions</a>
 <h1>Conversations</h1>
 <div class="summary">Total turns: {total} &nbsp;|&nbsp; Sessions: {sessions_count} &nbsp;|&nbsp; Showing: {len(rows)}{' (filtered by session)' if session else ''}</div>
 <table>
@@ -973,6 +983,24 @@ async function sendMessage() {
     }
   } catch (e) {
     assistantDiv.innerHTML = '<p style="color:#ef4444">Error: Could not get response. Please try again.</p>';
+  }
+
+  // Check for context limit sentinel
+  if (fullText.includes('__CONTEXT_LIMIT__')) {
+    fullText = fullText.replace('__CONTEXT_LIMIT__', '').trim();
+    assistantDiv.innerHTML = marked.parse(fullText);
+    const inputEl = document.getElementById('input');
+    const sendEl = document.getElementById('send-btn');
+    const uploadEl = document.getElementById('upload-btn');
+    inputEl.disabled = true;
+    inputEl.placeholder = 'Context limit reached — please start a New Chat.';
+    inputEl.style.opacity = '0.4';
+    sendEl.disabled = true;
+    uploadEl.disabled = true;
+    uploadEl.style.opacity = '0.4';
+    isStreaming = false;
+    document.getElementById('send-btn').disabled = true;
+    return;
   }
 
   // Copy button
