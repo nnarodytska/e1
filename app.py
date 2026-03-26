@@ -1125,6 +1125,7 @@ function resetChat() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ session_id: sessionId }),
   });
+  sessionId = crypto.randomUUID();
   document.getElementById('history-list').innerHTML = '';
   msgCount = 0;
   const chat = document.getElementById('chat-container');
