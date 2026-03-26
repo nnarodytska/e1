@@ -19,33 +19,16 @@ Streamed response with feedback collection
 
 - **Dynamic chapter routing** — only loads relevant chapters (3-4x cheaper than full book)
 - **Prompt caching** — subsequent questions reuse cached chapters
-- **4 auto-triggered skills** — formatting, troubleshooting, metric comparison, metric explorer
+- **Auto-triggered skills** — formatting, troubleshooting, metric comparison, metric explorer
 - **Image upload** — users can paste/upload vSphere screenshots for analysis
 - **Feedback collection** — thumbs up/down with optional comments stored in SQLite
 
 ## Prerequisites
 
 - Python 3.12+
-- Anthropic API key (only needed for the web app / CLI agent)
-- ngrok account (optional, for public access)
-
-## No API Key? Use Cursor Directly
-
-You can use this repo as a local knowledge base in Cursor without running `app.py` and without any API key for this project.
-
-1. Open this folder in Cursor.
-2. Ask your question in Cursor Chat (example: "Explain CPU Ready vs Co-Stop for a VM").
-3. For better grounding, reference files directly in your prompt:
-   - `@chapters/02_cpu.md`
-   - `@chapters/07_provider.md`
-   - `@book.md`
-4. The repo includes a Cursor rule at `.cursor/rules/vsphere-knowledge-base.mdc` so answers stay aligned to the book structure and terminology.
-
-Use the API-based app only if you specifically want the standalone web chat UI in this repo.
+- Anthropic API key
 
 ## Quick Start
-
-The repo includes preprocessed book content, so you can run the agent immediately.
 
 ### 1. Clone and install
 
@@ -65,64 +48,26 @@ ANTHROPIC_API_KEY=sk-ant-your-key-here
 
 ### 3. Run
 
+**Web app:**
 ```bash
 python3 -m uvicorn app:app --host 0.0.0.0 --port 8000
 ```
-
 Open http://localhost:8000
 
-### 4. Expose publicly (optional)
-
+**CLI (terminal chat):**
 ```bash
-# With ngrok (replace with your domain)
-ngrok http 8000 --domain your-domain.ngrok.dev
+python3 agent.py
 ```
-
-Or with Docker:
-
-```bash
-docker build -t vmware-metrics-qa .
-docker run -p 8000:8000 -e ANTHROPIC_API_KEY=sk-ant-... vmware-metrics-qa
-```
-
-## Re-processing the Book (optional)
-
-The preprocessed content is included in the repo. You only need to re-run these steps if the book is updated.
-
-Place the updated book at `book/VMware vSphere Metrics.docx`, then:
-
-```bash
-# Convert docx to structured markdown
-python3 preprocess.py
-
-# Describe images using Claude vision (~10-15 min, uses API credits)
-python3 describe_images.py
-
-# Build final book with image descriptions
-python3 build_book.py
-
-# Split into chapters for dynamic routing
-python3 split_chapters.py
-```
-
-If you skip `describe_images.py`, the agent still works — it just won't have textual descriptions of charts and diagrams.
 
 ## Project Structure
 
 ```
 ├── app.py                  # Web app (FastAPI + chat UI)
 ├── agent.py                # CLI agent (interactive terminal)
-├── preprocess.py           # Converts docx -> book_raw.md
-├── describe_images.py      # Describes images with Claude vision
-├── build_book.py           # Merges image descriptions -> book.md
-├── split_chapters.py       # Splits book into chapters for routing
 ├── requirements.txt        # Python dependencies
-├── Dockerfile              # Container build
 ├── .env                    # API key (not committed)
 │
-├── book_raw.md             # Converted markdown (no image descriptions)
-├── book.md                 # Full markdown (with image descriptions)
-├── image_descriptions.json # Vision-generated image descriptions
+├── book.md                 # Full book markdown (with image descriptions)
 │
 ├── chapters/               # Book split into individual chapters
 │   ├── chapter_index.json  # Chapter metadata and sections
@@ -134,14 +79,11 @@ If you skip `describe_images.py`, the agent still works — it just won't have t
 │
 ├── skills/                 # Auto-triggered agent skills
 │   ├── formatting.md       # Answer structure (always active)
-│   ├── troubleshoot.md     # Decision trees from drawio diagrams
+│   ├── troubleshoot.md     # Troubleshooting decision trees
 │   ├── compare.md          # Side-by-side metric comparison
 │   └── explore.md          # Level-by-level metric breakdown
 │
-├── diagrams/               # Source troubleshooting flowcharts
-│   └── vSphere CPU Performance Troubleshooting.drawio
-│
-└── feedback.db             # User feedback (SQLite, auto-created)
+└── feedback.db             # Conversations + feedback (SQLite, auto-created)
 ```
 
 ## Skills
@@ -151,7 +93,10 @@ Skills are markdown files in `skills/` that are loaded automatically at startup.
 | Skill | File | Trigger |
 |-------|------|---------|
 | **Formatting** | `formatting.md` | Always active. Structures every answer with TL;DR, Details, Action, Book ref. |
-| **Troubleshoot** | `troubleshoot.md` | When user describes a performance problem. Uses decision trees from the drawio diagrams. |
+| **Troubleshoot** | `troubleshoot.md` | When user describes a performance problem. |
+| **Troubleshoot CPU** | `troubleshoot_cpu.md` | When user reports VM CPU contention (high Ready, co-stop, slow VM). |
+| **Troubleshoot Memory** | `troubleshoot_memory.md` | When user reports VM memory contention (balloon, swap, latency). |
+| **CPU Frequency** | `cpu_frequency.md` | When user asks about actual CPU speed, Turbo Boost, or power policy effects. |
 | **Compare** | `compare.md` | When user asks about differences between metrics ("X vs Y"). |
 | **Explore** | `explore.md` | When user asks about a specific metric across levels (VM/ESXi/Cluster). |
 
@@ -172,6 +117,8 @@ To add a new skill, create a `.md` file in `skills/` and restart the server.
 # All feedback
 sqlite3 feedback.db "SELECT created_at, rating, comment, substr(question,1,60) FROM feedback ORDER BY created_at DESC"
 
-# Just thumbs down with comments
+# Thumbs down with comments
 sqlite3 feedback.db "SELECT created_at, comment, substr(question,1,60) FROM feedback WHERE rating='down' AND comment != '' ORDER BY created_at DESC"
 ```
+
+Or visit `/conversations` in the web app for a full admin view with ratings.
