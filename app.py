@@ -805,10 +805,6 @@ HTML_PAGE = """<!DOCTYPE html>
 
 <header>
   <button id="sidebar-toggle" onclick="toggleSidebar()" title="Toggle history">&#9776;</button>
-  <div class="logo">
-    <div class="logo-mark">BROADCOM</div>
-    <div class="logo-divider"></div>
-  </div>
   <div class="header-title"><span>VMware Metrics</span> Q&amp;A</div>
   <button id="reset-btn" onclick="resetChat()">+ New Chat</button>
 </header>
