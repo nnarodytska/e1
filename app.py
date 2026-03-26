@@ -97,6 +97,16 @@ def init_db():
             created_at TEXT NOT NULL
         )
     """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS conversations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT NOT NULL,
+            question TEXT NOT NULL,
+            answer TEXT NOT NULL,
+            chapters TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL
+        )
+    """)
     conn.commit()
     conn.close()
 
@@ -248,9 +258,17 @@ async def chat(request: Request):
                 full_response.append(text)
                 yield text
 
-        sessions[session_id].append(
-            {"role": "assistant", "content": "".join(full_response)}
+        answer_text = "".join(full_response)
+        sessions[session_id].append({"role": "assistant", "content": answer_text})
+
+        # Persist conversation turn
+        conn = sqlite3.connect(DB_PATH)
+        conn.execute(
+            "INSERT INTO conversations (session_id, question, answer, chapters, created_at) VALUES (?, ?, ?, ?, ?)",
+            (session_id, message[:3000], answer_text, ", ".join(selected), datetime.now(timezone.utc).isoformat()),
         )
+        conn.commit()
+        conn.close()
 
     return StreamingResponse(generate(), media_type="text/plain")
 
@@ -307,6 +325,79 @@ th{{background:#1e293b;color:#93c5fd}}.summary{{margin-bottom:16px;color:#94a3b8
 <table><tr><th>Time</th><th>Rating</th><th>Comment</th><th>Question</th></tr>
 {rows_html or '<tr><td colspan=4>No feedback yet</td></tr>'}
 </table></body></html>"""
+    return HTMLResponse(html)
+
+
+@app.get("/conversations", response_class=HTMLResponse)
+async def conversations_page(request: Request, key: str = "", session: str = ""):
+    secret = os.environ.get("FEEDBACK_KEY", "")
+    if secret and key != secret:
+        return HTMLResponse("<h3>Unauthorized</h3>", status_code=401)
+    conn = sqlite3.connect(DB_PATH)
+    if session:
+        rows = conn.execute(
+            "SELECT id, session_id, question, answer, chapters, created_at FROM conversations WHERE session_id=? ORDER BY created_at ASC",
+            (session,),
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            "SELECT id, session_id, question, answer, chapters, created_at FROM conversations ORDER BY created_at DESC LIMIT 500"
+        ).fetchall()
+    total = conn.execute("SELECT COUNT(*) FROM conversations").fetchone()[0]
+    sessions_count = conn.execute("SELECT COUNT(DISTINCT session_id) FROM conversations").fetchone()[0]
+    conn.close()
+
+    key_qs = f"?key={key}" if key else ""
+
+    rows_html = ""
+    for r in rows:
+        rid, sid, q, ans, chaps, ts = r
+        sid_short = sid[:8]
+        q_preview = q[:120].replace("<", "&lt;").replace(">", "&gt;")
+        ans_preview = ans[:200].replace("<", "&lt;").replace(">", "&gt;")
+        ans_full = ans.replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br>")
+        rows_html += f"""
+        <tr onclick="toggle({rid})" style="cursor:pointer">
+          <td>{ts[:16]}</td>
+          <td><a href="/conversations{key_qs}&amp;session={sid}" style="color:#60a5fa;text-decoration:none">{sid_short}…</a></td>
+          <td style="color:#94a3b8;font-size:11px">{chaps[:60]}</td>
+          <td>{q_preview}{'…' if len(q)>120 else ''}</td>
+        </tr>
+        <tr id="row-{rid}" style="display:none;background:#0f172a">
+          <td colspan=4 style="padding:16px;white-space:pre-wrap;font-size:13px;line-height:1.6;border-top:1px solid #1e3a5f">
+            <strong style="color:#60a5fa">Q:</strong> {q.replace('<','&lt;').replace('>','&gt;')}<br><br>
+            <strong style="color:#4ade80">A:</strong><br>{ans_full}
+          </td>
+        </tr>"""
+
+    html = f"""<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>Conversations</title>
+<style>
+  body{{font-family:sans-serif;padding:24px;background:#0d1117;color:#e2e8f0;margin:0}}
+  h1{{color:#60a5fa;margin-bottom:4px}}
+  .summary{{margin-bottom:16px;color:#94a3b8;font-size:14px}}
+  table{{border-collapse:collapse;width:100%;font-size:13px}}
+  th,td{{border:1px solid #1e2a35;padding:8px 12px;text-align:left;vertical-align:top}}
+  th{{background:#161b22;color:#7ecff0}}
+  tr:hover td{{background:#161b22}}
+  a{{color:#60a5fa}}
+  .back{{margin-bottom:12px;display:inline-block;color:#60a5fa;text-decoration:none;font-size:13px}}
+</style>
+<script>
+function toggle(id){{
+  var r=document.getElementById('row-'+id);
+  r.style.display=r.style.display==='none'?'table-row':'none';
+}}
+</script>
+</head><body>
+<a class="back" href="/conversations{key_qs}">&larr; All sessions</a>
+<h1>Conversations</h1>
+<div class="summary">Total turns: {total} &nbsp;|&nbsp; Sessions: {sessions_count} &nbsp;|&nbsp; Showing: {len(rows)}{' (filtered by session)' if session else ''}</div>
+<table>
+  <tr><th>Time</th><th>Session</th><th>Chapters</th><th>Question</th></tr>
+  {rows_html or '<tr><td colspan=4>No conversations yet</td></tr>'}
+</table>
+</body></html>"""
     return HTMLResponse(html)
 
 
