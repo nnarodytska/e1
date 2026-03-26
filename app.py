@@ -89,7 +89,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS feedback (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             session_id TEXT NOT NULL,
-            message_id TEXT NOT NULL,
+            message_id TEXT NOT NULL UNIQUE,
             question TEXT NOT NULL,
             answer TEXT NOT NULL,
             rating TEXT NOT NULL CHECK(rating IN ('up', 'down')),
@@ -288,7 +288,8 @@ async def feedback(request: Request):
 
     conn = sqlite3.connect(DB_PATH)
     conn.execute(
-        "INSERT INTO feedback (session_id, message_id, question, answer, rating, comment, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO feedback (session_id, message_id, question, answer, rating, comment, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)"
+        " ON CONFLICT(message_id) DO UPDATE SET rating=excluded.rating, comment=excluded.comment, created_at=excluded.created_at",
         (session_id, message_id, question[:2000], answer[:5000], rating, comment[:1000], datetime.now(timezone.utc).isoformat()),
     )
     conn.commit()
@@ -1017,26 +1018,31 @@ async function sendMessage() {
 
 function submitFeedback(btn, rating) {
   const bar = btn.closest('.feedback-bar');
-  if (bar.dataset.submitted === 'true') return;
-
   const msgId = bar.getAttribute('data-msg-id');
   const question = bar._question;
   const answer = bar._answer;
 
+  // Remove previous selection
   const buttons = bar.querySelectorAll('button');
   buttons.forEach(b => b.classList.remove('selected-up', 'selected-down'));
   btn.classList.add(rating === 'up' ? 'selected-up' : 'selected-down');
 
+  // Remove any existing comment box if switching to thumbs up
+  const existingBox = bar.parentElement.querySelector('.feedback-comment-box');
+  if (existingBox && rating === 'up') existingBox.remove();
+
+  // Reset label to "thanks" if it was already shown
+  const label = bar.querySelector('.feedback-label, .feedback-thanks');
+  if (label) { label.className = 'feedback-label'; label.textContent = 'Was this helpful?'; }
+
   if (rating === 'up') {
-    bar.dataset.submitted = 'true';
     fetch('/api/feedback', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ session_id: sessionId, message_id: msgId, question, answer, rating }),
     });
-    const label = bar.querySelector('.feedback-label');
-    label.className = 'feedback-thanks';
-    label.textContent = 'Thanks for the feedback!';
+    const lbl = bar.querySelector('.feedback-label');
+    if (lbl) { lbl.className = 'feedback-thanks'; lbl.textContent = 'Thanks for the feedback!'; }
   } else {
     let commentBox = bar.parentElement.querySelector('.feedback-comment-box');
     if (!commentBox) {
