@@ -17,8 +17,8 @@ Answer (Sonnet) ──> responds using selected chapters + skills (~30-60K token
 Streamed response with feedback collection
 ```
 
-- **Dynamic chapter routing** — only loads relevant chapters (3-4x cheaper than full book)
-- **Prompt caching** — subsequent questions reuse cached chapters
+- **Dynamic chapter routing** — only loads relevant chapters instead of the full book
+- **Prompt caching** — system prompt and skills are cached across questions
 - **Auto-triggered skills** — formatting, troubleshooting, metric comparison, metric explorer
 - **Image upload** — users can paste/upload vSphere screenshots for analysis
 - **Feedback collection** — thumbs up/down with optional comments stored in SQLite
@@ -104,12 +104,14 @@ To add a new skill, create a `.md` file in `skills/` and restart the server.
 
 ## Costs
 
+The system+skills prompt (~5K tokens) is cached after the first question. Book chapters are selected dynamically per question and are not cached.
+
 | Scenario | Tokens | Cost per question |
 |----------|--------|-------------------|
-| First question (cache write) | ~60K | ~$0.20 |
-| Subsequent questions (cache read) | ~60K | ~$0.02 |
+| First question (cache write for skills) | ~5K skills + ~20–50K chapters | ~$0.08–$0.20 |
+| Subsequent questions (skills cached) | ~5K cached + ~20–50K chapters | ~$0.06–$0.18 |
 | Router call (Haiku) | ~2K | ~$0.001 |
-| 10-question session | | ~$0.40 |
+| 10-question session | | ~$0.70–$1.80 |
 
 ## Viewing Feedback
 

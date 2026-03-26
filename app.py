@@ -239,11 +239,14 @@ async def chat(request: Request):
     print(f"  Router selected: {selected} (~{excerpt_tokens:,} tokens)")
 
     system = [
-        {"type": "text", "text": SYSTEM_PROMPT + skills_content},
+        {
+            "type": "text",
+            "text": SYSTEM_PROMPT + skills_content,
+            "cache_control": {"type": "ephemeral"},
+        },
         {
             "type": "text",
             "text": f"## Book Chapters: {', '.join(selected)}\n\n{book_excerpt}",
-            "cache_control": {"type": "ephemeral"},
         },
     ]
 
