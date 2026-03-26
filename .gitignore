@@ -16,6 +16,9 @@ feedback.db
 # Ngrok
 ngrok_recovery_codes.txt
 
+# Local notes (not for repo)
+README.local.md
+
 # Claude
 .claude/
 
