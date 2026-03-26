@@ -833,7 +833,7 @@ HTML_PAGE = """<!DOCTYPE html>
 </div>
 
 <script>
-const sessionId = crypto.randomUUID();
+let sessionId = crypto.randomUUID();
 let isStreaming = false;
 let pendingImages = [];
 let msgCount = 0;
