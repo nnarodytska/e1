@@ -341,60 +341,49 @@ th{{background:#1e293b;color:#93c5fd}}.summary{{margin-bottom:16px;color:#94a3b8
 
 
 @app.get("/conversations", response_class=HTMLResponse)
-async def conversations_page(request: Request, key: str = "", session: str = ""):
+async def conversations_page(request: Request, key: str = ""):
     secret = os.environ.get("FEEDBACK_KEY", "")
     if secret and key != secret:
         return HTMLResponse("<h3>Unauthorized</h3>", status_code=401)
     conn = sqlite3.connect(DB_PATH)
-    join_sql = """
-        SELECT c.id, c.session_id, c.question, c.answer, c.chapters, c.created_at,
-               f.rating, f.comment
+    sessions = conn.execute("""
+        SELECT c.session_id, MIN(c.created_at) as started, COUNT(*) as turns,
+               SUM(CASE WHEN f.rating='up' THEN 1 ELSE 0 END) as ups,
+               SUM(CASE WHEN f.rating='down' THEN 1 ELSE 0 END) as downs,
+               (SELECT question FROM conversations WHERE session_id=c.session_id ORDER BY created_at ASC LIMIT 1) as first_q
         FROM conversations c
         LEFT JOIN feedback f ON f.message_id = c.message_id
-    """
-    if session:
-        rows = conn.execute(
-            join_sql + " WHERE c.session_id=? ORDER BY c.created_at ASC",
-            (session,),
-        ).fetchall()
-    else:
-        rows = conn.execute(
-            join_sql + " ORDER BY c.created_at DESC LIMIT 500"
-        ).fetchall()
-    total = conn.execute("SELECT COUNT(*) FROM conversations").fetchone()[0]
-    sessions_count = conn.execute("SELECT COUNT(DISTINCT session_id) FROM conversations").fetchone()[0]
+        GROUP BY c.session_id
+        ORDER BY started DESC
+        LIMIT 200
+    """).fetchall()
+    total_turns = conn.execute("SELECT COUNT(*) FROM conversations").fetchone()[0]
     conn.close()
 
-    def session_url(sid):
-        parts = []
-        if key:
-            parts.append(f"key={key}")
-        parts.append(f"session={sid}")
-        return "/conversations?" + "&".join(parts)
-
     rows_html = ""
-    for r in rows:
-        rid, sid, q, ans, chaps, ts, rating, comment = r
+    for sid, started, turns, ups, downs, first_q in sessions:
         sid_short = sid[:8]
-        q_preview = q[:120].replace("<", "&lt;").replace(">", "&gt;")
-        ans_full = ans.replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br>")
-        rating_icon = "👍" if rating == "up" else ("👎" if rating == "down" else "—")
-        rating_title = f' title="{comment}"' if comment else ""
+        q_preview = (first_q or "")[:100].replace("<", "&lt;").replace(">", "&gt;")
+        ratings = ""
+        if ups:
+            ratings += f"👍{ups} "
+        if downs:
+            ratings += f"👎{downs}"
         rows_html += f"""
-        <tr onclick="toggle({rid})" style="cursor:pointer">
-          <td>{ts[:16]}</td>
-          <td><a href="{session_url(sid)}" style="color:#60a5fa;text-decoration:none" onclick="event.stopPropagation()">{sid_short}…</a></td>
-          <td style="color:#94a3b8;font-size:11px">{chaps[:60]}</td>
-          <td style="text-align:center"{rating_title}>{rating_icon}</td>
-          <td>{q_preview}{'…' if len(q)>120 else ''}</td>
+        <tr onclick="expand(this, '{sid}')" style="cursor:pointer" data-sid="{sid}">
+          <td>{started[:16]}</td>
+          <td style="color:#94a3b8;font-family:monospace">{sid_short}…</td>
+          <td style="text-align:center">{turns}</td>
+          <td style="text-align:center">{ratings or '—'}</td>
+          <td>{q_preview}{'…' if first_q and len(first_q)>100 else ''}</td>
         </tr>
-        <tr id="row-{rid}" style="display:none;background:#0f172a">
-          <td colspan=5 style="padding:16px;white-space:pre-wrap;font-size:13px;line-height:1.6;border-top:1px solid #1e3a5f">
-            <strong style="color:#60a5fa">Q:</strong> {q.replace('<','&lt;').replace('>','&gt;')}<br><br>
-            <strong style="color:#4ade80">A:</strong><br>{ans_full}
+        <tr id="detail-{sid}" style="display:none;background:#0a0f1a">
+          <td colspan=5 style="padding:0">
+            <div id="dialog-{sid}" style="padding:16px"></div>
           </td>
         </tr>"""
 
+    key_param = f"?key={key}" if key else ""
     html = f"""<!DOCTYPE html><html><head><meta charset="UTF-8">
 <title>Conversations</title>
 <style>
@@ -405,21 +394,44 @@ async def conversations_page(request: Request, key: str = "", session: str = "")
   th,td{{border:1px solid #1e2a35;padding:8px 12px;text-align:left;vertical-align:top}}
   th{{background:#161b22;color:#7ecff0}}
   tr:hover td{{background:#161b22}}
-  a{{color:#60a5fa}}
-  .back{{margin-bottom:12px;display:inline-block;color:#60a5fa;text-decoration:none;font-size:13px}}
+  .turn{{margin-bottom:20px;border-left:3px solid #1e3a5f;padding-left:12px}}
+  .turn-q{{color:#60a5fa;font-weight:bold;margin-bottom:6px}}
+  .turn-a{{color:#e2e8f0;white-space:pre-wrap;line-height:1.6;font-size:13px}}
+  .turn-meta{{color:#64748b;font-size:11px;margin-top:6px}}
 </style>
 <script>
-function toggle(id){{
-  var r=document.getElementById('row-'+id);
-  r.style.display=r.style.display==='none'?'table-row':'none';
+async function expand(row, sid) {{
+  var detail = document.getElementById('detail-'+sid);
+  var dialog = document.getElementById('dialog-'+sid);
+  if (detail.style.display !== 'none') {{
+    detail.style.display = 'none';
+    return;
+  }}
+  detail.style.display = 'table-row';
+  if (dialog.dataset.loaded) return;
+  dialog.innerHTML = '<em style="color:#64748b">Loading…</em>';
+  const res = await fetch('/api/sessions/'+sid);
+  const turns = await res.json();
+  dialog.dataset.loaded = '1';
+  dialog.innerHTML = turns.map((t,i) => {{
+    const rating = t.rating === 'up' ? ' 👍' : t.rating === 'down' ? ' 👎' : '';
+    const comment = t.comment ? ` — ${{t.comment}}` : '';
+    return `<div class="turn">
+      <div class="turn-q">Q${{i+1}}: ${{esc(t.question)}}</div>
+      <div class="turn-a">${{esc(t.answer)}}</div>
+      <div class="turn-meta">${{t.created_at}}${{rating}}${{comment}}</div>
+    </div>`;
+  }}).join('') || '<em style="color:#64748b">No turns found.</em>';
+}}
+function esc(s) {{
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }}
 </script>
 </head><body>
-<a class="back" href="/conversations{'?key='+key if key else ''}">&larr; All sessions</a>
 <h1>Conversations</h1>
-<div class="summary">Total turns: {total} &nbsp;|&nbsp; Sessions: {sessions_count} &nbsp;|&nbsp; Showing: {len(rows)}{' (filtered by session)' if session else ''}</div>
+<div class="summary">Sessions: {len(sessions)} &nbsp;|&nbsp; Total turns: {total_turns}</div>
 <table>
-  <tr><th>Time</th><th>Session</th><th>Chapters</th><th>Rating</th><th>Question</th></tr>
+  <tr><th>Started</th><th>Session</th><th>Turns</th><th>Ratings</th><th>First question</th></tr>
   {rows_html or '<tr><td colspan=5>No conversations yet</td></tr>'}
 </table>
 </body></html>"""
@@ -445,11 +457,14 @@ async def get_sessions():
 async def get_session(session_id: str):
     conn = sqlite3.connect(DB_PATH)
     rows = conn.execute(
-        "SELECT question, answer, created_at FROM conversations WHERE session_id=? ORDER BY created_at ASC",
+        """SELECT c.question, c.answer, c.created_at, f.rating, f.comment
+           FROM conversations c
+           LEFT JOIN feedback f ON f.message_id = c.message_id
+           WHERE c.session_id=? ORDER BY c.created_at ASC""",
         (session_id,),
     ).fetchall()
     conn.close()
-    return [{"question": r[0], "answer": r[1], "created_at": r[2][:16]} for r in rows]
+    return [{"question": r[0], "answer": r[1], "created_at": r[2][:16], "rating": r[3], "comment": r[4]} for r in rows]
 
 
 @app.get("/export-json")
