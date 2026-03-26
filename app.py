@@ -606,21 +606,6 @@ HTML_PAGE = """<!DOCTYPE html>
   .history-item:hover { color: #c8d9e6; background: #161b22; border-left-color: #005C8A; }
   .history-item.active { color: #fff; background: #161b22; border-left-color: #8B0000; }
 
-  #past-sessions { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 4px 0; }
-  #past-sessions::-webkit-scrollbar { width: 3px; }
-  #past-sessions::-webkit-scrollbar-thumb { background: #1e2a35; border-radius: 2px; }
-  .past-item {
-    padding: 7px 14px;
-    font-size: 12px;
-    color: #5a7a8a;
-    cursor: pointer;
-    border-left: 2px solid transparent;
-    line-height: 1.3;
-    transition: all 0.12s;
-  }
-  .past-item:hover { color: #c8d9e6; background: #161b22; border-left-color: #005C8A; }
-  .past-item .past-date { font-size: 10px; color: #3a5a6a; margin-bottom: 2px; }
-  .past-item.active { color: #fff; background: #161b22; border-left-color: #005C8A; }
 
   /* ── Main column ── */
   #main-col {
@@ -855,8 +840,6 @@ HTML_PAGE = """<!DOCTYPE html>
   <aside id="sidebar">
     <div class="sidebar-header">This Session</div>
     <div id="history-list"></div>
-    <div class="sidebar-header" style="margin-top:8px">Past Sessions</div>
-    <div id="past-sessions"></div>
   </aside>
   <div id="main-col">
     <div id="chat-container">
@@ -890,87 +873,8 @@ let sessionId = crypto.randomUUID();
 let isStreaming = false;
 let pendingImages = [];
 let msgCount = 0;
-let viewingPast = false;
 
-async function loadPastSessions() {
-  try {
-    const res = await fetch('/api/sessions');
-    const sessions = await res.json();
-    const container = document.getElementById('past-sessions');
-    container.innerHTML = '';
-    if (!sessions.length) {
-      container.innerHTML = '<div style="padding:8px 14px;font-size:11px;color:#3a5a6a">No past sessions</div>';
-      return;
-    }
-    sessions.forEach(s => {
-      const item = document.createElement('div');
-      item.className = 'past-item';
-      item.innerHTML = '<div class="past-date">' + s.started + ' &middot; ' + s.turns + ' Q</div>' + (s.first_q || '(no text)');
-      item.addEventListener('click', () => loadPastSession(s.session_id, item));
-      container.appendChild(item);
-    });
-  } catch(e) {}
-}
 
-async function loadPastSession(sid, clickedEl) {
-  if (isStreaming) return;
-  try {
-    const res = await fetch('/api/sessions/' + sid);
-    const turns = await res.json();
-
-    // Mark active
-    document.querySelectorAll('.past-item').forEach(i => i.classList.remove('active'));
-    clickedEl.classList.add('active');
-    document.querySelectorAll('.history-item').forEach(i => i.classList.remove('active'));
-
-    // Render in chat
-    const chat = document.getElementById('chat-container');
-    const welcome = document.getElementById('welcome');
-    if (welcome) welcome.remove();
-    chat.innerHTML = '<div style="text-align:center;padding:12px;font-size:13px;color:#4a7a94;border-bottom:1px solid #1e2a35;margin-bottom:12px">Viewing past session &mdash; <a href="#" onclick="returnToChat();return false;" style="color:#7ecff0">return to current chat</a></div>';
-
-    turns.forEach(t => {
-      const userDiv = document.createElement('div');
-      userDiv.className = 'message user';
-      userDiv.textContent = t.question;
-      chat.appendChild(userDiv);
-
-      const assistantDiv = document.createElement('div');
-      assistantDiv.className = 'message assistant';
-      assistantDiv.innerHTML = marked.parse(t.answer);
-      chat.appendChild(assistantDiv);
-    });
-
-    chat.scrollTop = 0;
-    viewingPast = true;
-  } catch(e) {}
-}
-
-function returnToChat() {
-  viewingPast = false;
-  document.querySelectorAll('.past-item').forEach(i => i.classList.remove('active'));
-  const chat = document.getElementById('chat-container');
-  // Restore current session messages or welcome
-  if (msgCount === 0) {
-    chat.innerHTML = `<div id="welcome">
-      <h2>VMware vSphere Metrics Expert</h2>
-      <p>Ask any question about VMware vSphere metrics. Answers are grounded in the authoritative book with full reasoning chains preserved.</p>
-      <div class="example-questions" style="margin-top: 16px;">
-        <div class="example-q" onclick="askExample(this)">My VM is slow and I see high CPU Ready. Help me troubleshoot.</div>
-        <div class="example-q" onclick="askExample(this)">What is the difference between CPU Ready and CPU Contention?</div>
-        <div class="example-q" onclick="askExample(this)">What is the difference between Usage and Utilization?</div>
-        <div class="example-q" onclick="askExample(this)">Why is VM CPU Demand lower than VM CPU Usage?</div>
-        <div class="example-q" onclick="askExample(this)">Explain CPU Usage across VM, ESXi, and Cluster levels</div>
-        <div class="example-q" onclick="askExample(this)">What is the impact of Hyper-Threading on CPU metrics?</div>
-      </div>
-    </div>`;
-  } else {
-    chat.innerHTML = '<div style="text-align:center;padding:12px;font-size:13px;color:#4a7a94">Scroll up to see current session messages — or ask a new question below.</div>';
-  }
-}
-
-// Load past sessions on startup
-loadPastSessions();
 
 function toggleSidebar() {
   const sidebar = document.getElementById('sidebar');
@@ -1176,7 +1080,6 @@ async function sendMessage() {
   isStreaming = false;
   document.getElementById('send-btn').disabled = false;
   input.focus();
-  loadPastSessions();
 }
 
 function submitFeedback(btn, rating) {
@@ -1263,7 +1166,6 @@ function resetChat() {
   sessionId = crypto.randomUUID();
   document.getElementById('history-list').innerHTML = '';
   msgCount = 0;
-  loadPastSessions();
   const chat = document.getElementById('chat-container');
   chat.innerHTML = `
     <div id="welcome">
