@@ -101,6 +101,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS conversations (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             session_id TEXT NOT NULL,
+            message_id TEXT NOT NULL DEFAULT '',
             question TEXT NOT NULL,
             answer TEXT NOT NULL,
             chapters TEXT NOT NULL DEFAULT '',
@@ -204,6 +205,7 @@ async def chat(request: Request):
     body = await request.json()
     message = body.get("message", "").strip()
     session_id = body.get("session_id", str(uuid.uuid4()))
+    message_id = body.get("message_id", str(uuid.uuid4()))
     images = body.get("images", [])  # list of {data: base64, media_type: "image/png"}
 
     if not message and not images:
@@ -270,8 +272,8 @@ async def chat(request: Request):
         # Persist conversation turn
         conn = sqlite3.connect(DB_PATH)
         conn.execute(
-            "INSERT INTO conversations (session_id, question, answer, chapters, created_at) VALUES (?, ?, ?, ?, ?)",
-            (session_id, message[:3000], answer_text, ", ".join(selected), datetime.now(timezone.utc).isoformat()),
+            "INSERT INTO conversations (session_id, message_id, question, answer, chapters, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+            (session_id, message_id, message[:3000], answer_text, ", ".join(selected), datetime.now(timezone.utc).isoformat()),
         )
         conn.commit()
         conn.close()
@@ -341,14 +343,20 @@ async def conversations_page(request: Request, key: str = "", session: str = "")
     if secret and key != secret:
         return HTMLResponse("<h3>Unauthorized</h3>", status_code=401)
     conn = sqlite3.connect(DB_PATH)
+    join_sql = """
+        SELECT c.id, c.session_id, c.question, c.answer, c.chapters, c.created_at,
+               f.rating, f.comment
+        FROM conversations c
+        LEFT JOIN feedback f ON f.message_id = c.message_id
+    """
     if session:
         rows = conn.execute(
-            "SELECT id, session_id, question, answer, chapters, created_at FROM conversations WHERE session_id=? ORDER BY created_at ASC",
+            join_sql + " WHERE c.session_id=? ORDER BY c.created_at ASC",
             (session,),
         ).fetchall()
     else:
         rows = conn.execute(
-            "SELECT id, session_id, question, answer, chapters, created_at FROM conversations ORDER BY created_at DESC LIMIT 500"
+            join_sql + " ORDER BY c.created_at DESC LIMIT 500"
         ).fetchall()
     total = conn.execute("SELECT COUNT(*) FROM conversations").fetchone()[0]
     sessions_count = conn.execute("SELECT COUNT(DISTINCT session_id) FROM conversations").fetchone()[0]
@@ -363,19 +371,22 @@ async def conversations_page(request: Request, key: str = "", session: str = "")
 
     rows_html = ""
     for r in rows:
-        rid, sid, q, ans, chaps, ts = r
+        rid, sid, q, ans, chaps, ts, rating, comment = r
         sid_short = sid[:8]
         q_preview = q[:120].replace("<", "&lt;").replace(">", "&gt;")
         ans_full = ans.replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br>")
+        rating_icon = "👍" if rating == "up" else ("👎" if rating == "down" else "—")
+        rating_title = f' title="{comment}"' if comment else ""
         rows_html += f"""
         <tr onclick="toggle({rid})" style="cursor:pointer">
           <td>{ts[:16]}</td>
           <td><a href="{session_url(sid)}" style="color:#60a5fa;text-decoration:none" onclick="event.stopPropagation()">{sid_short}…</a></td>
           <td style="color:#94a3b8;font-size:11px">{chaps[:60]}</td>
+          <td style="text-align:center"{rating_title}>{rating_icon}</td>
           <td>{q_preview}{'…' if len(q)>120 else ''}</td>
         </tr>
         <tr id="row-{rid}" style="display:none;background:#0f172a">
-          <td colspan=4 style="padding:16px;white-space:pre-wrap;font-size:13px;line-height:1.6;border-top:1px solid #1e3a5f">
+          <td colspan=5 style="padding:16px;white-space:pre-wrap;font-size:13px;line-height:1.6;border-top:1px solid #1e3a5f">
             <strong style="color:#60a5fa">Q:</strong> {q.replace('<','&lt;').replace('>','&gt;')}<br><br>
             <strong style="color:#4ade80">A:</strong><br>{ans_full}
           </td>
@@ -405,8 +416,8 @@ function toggle(id){{
 <h1>Conversations</h1>
 <div class="summary">Total turns: {total} &nbsp;|&nbsp; Sessions: {sessions_count} &nbsp;|&nbsp; Showing: {len(rows)}{' (filtered by session)' if session else ''}</div>
 <table>
-  <tr><th>Time</th><th>Session</th><th>Chapters</th><th>Question</th></tr>
-  {rows_html or '<tr><td colspan=4>No conversations yet</td></tr>'}
+  <tr><th>Time</th><th>Session</th><th>Chapters</th><th>Rating</th><th>Question</th></tr>
+  {rows_html or '<tr><td colspan=5>No conversations yet</td></tr>'}
 </table>
 </body></html>"""
     return HTMLResponse(html)
@@ -436,6 +447,45 @@ async def get_session(session_id: str):
     ).fetchall()
     conn.close()
     return [{"question": r[0], "answer": r[1], "created_at": r[2][:16]} for r in rows]
+
+
+@app.get("/export-json")
+async def export_json(request: Request, key: str = "", rated: str = ""):
+    secret = os.environ.get("FEEDBACK_KEY", "")
+    if secret and key != secret:
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+    conn = sqlite3.connect(DB_PATH)
+    # Join conversations with feedback on message_id
+    where = "WHERE f.rating = ?" if rated in ("up", "down") else ""
+    params = (rated,) if rated in ("up", "down") else ()
+    rows = conn.execute(f"""
+        SELECT c.session_id, c.message_id, c.question, c.answer, c.chapters, c.created_at,
+               f.rating, f.comment
+        FROM conversations c
+        LEFT JOIN feedback f ON c.message_id = f.message_id
+        {where}
+        ORDER BY c.session_id, c.created_at ASC
+    """, params).fetchall()
+    conn.close()
+
+    # Group by session
+    from collections import OrderedDict
+    sessions_map = OrderedDict()
+    for r in rows:
+        sid = r[0]
+        if sid not in sessions_map:
+            sessions_map[sid] = {"session_id": sid, "turns": []}
+        sessions_map[sid]["turns"].append({
+            "message_id": r[1],
+            "question": r[2],
+            "answer": r[3],
+            "chapters": r[4],
+            "created_at": r[5][:16],
+            "rating": r[6] or None,
+            "feedback_comment": r[7] or None,
+        })
+
+    return JSONResponse(list(sessions_map.values()))
 
 
 @app.get("/export-db")
@@ -995,9 +1045,11 @@ async function sendMessage() {
   chat.appendChild(assistantDiv);
   chat.scrollTop = chat.scrollHeight;
 
+  const msgId = crypto.randomUUID();
   const payload = {
     message: message || 'Please analyze this screenshot and explain what the metrics show.',
     session_id: sessionId,
+    message_id: msgId,
     images: imagesToSend.map(i => ({ data: i.data, media_type: i.media_type })),
   };
 
@@ -1054,8 +1106,7 @@ async function sendMessage() {
   });
   assistantDiv.appendChild(copyBtn);
 
-  // Feedback bar
-  const msgId = crypto.randomUUID();
+  // Feedback bar (reuse msgId from request payload)
   const feedbackBar = document.createElement('div');
   feedbackBar.className = 'feedback-bar';
   feedbackBar.setAttribute('data-msg-id', msgId);
