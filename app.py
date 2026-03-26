@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 import anthropic
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
 
 load_dotenv()
 
@@ -410,6 +410,19 @@ function toggle(id){{
 </table>
 </body></html>"""
     return HTMLResponse(html)
+
+
+@app.get("/export-db")
+async def export_db(request: Request, key: str = ""):
+    secret = os.environ.get("FEEDBACK_KEY", "")
+    if secret and key != secret:
+        return HTMLResponse("<h3>Unauthorized</h3>", status_code=401)
+    ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    return FileResponse(
+        DB_PATH,
+        media_type="application/octet-stream",
+        filename=f"feedback_{ts}.db",
+    )
 
 
 @app.post("/api/reset")
